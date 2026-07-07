@@ -1,16 +1,33 @@
-# React + Vite
+# EduGestion Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend React/Vite preparado para conectarse a microservicios publicados en AWS.
 
-Currently, two official plugins are available:
+## Configuracion de microservicios AWS
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+1. Copia `.env.example` como `.env`.
+2. Reemplaza cada URL por el endpoint publico de tus servicios en AWS.
+3. Reinicia `npm run dev` despues de cambiar variables `VITE_*`.
 
-## React Compiler
+```bash
+VITE_AUTH_API_URL=https://api.tu-dominio.com
+VITE_USERS_API_URL=https://users.tu-dominio.com
+VITE_COURSES_API_URL=https://courses.tu-dominio.com
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+El login usa estos endpoints por defecto:
 
-## Expanding the ESLint configuration
+- `POST /auth/login`
+- `POST /auth/register`
+- `GET /auth/me`
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Si tu backend usa rutas distintas, ajustalas en `src/services/authService.js`.
+
+La guia completa de CORS, headers y formato de respuesta esta en `docs/aws-microservices.md`.
+
+## Scripts
+
+```bash
+npm run dev
+npm run build
+npm run preview
+```

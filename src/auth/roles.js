@@ -7,10 +7,10 @@ export const roles = [
 
 export const permisos = {
   Administrador: [
-    "Gestión de usuarios",
+    "Gestion de usuarios",
     "Cursos",
     "Ficha alumno",
-    "Mensajería",
+    "Mensajeria",
     "Calendario",
     "Anotaciones"
   ],
@@ -25,7 +25,7 @@ export const permisos = {
   Apoderado: [
     "Ficha alumno",
     "Calendario",
-    "Mensajería"
+    "Mensajeria"
   ],
 
   Estudiante: [

@@ -75,9 +75,26 @@ button {
   cursor: pointer;
 }
 
+button:disabled {
+  cursor: not-allowed;
+  opacity: .65;
+  transform: none;
+}
+
 button:hover {
   transform: translateY(-1px);
   opacity: .95;
+}
+
+.form-error {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(239, 68, 68, .12);
+  border: 1px solid rgba(239, 68, 68, .35);
+  color: #fecaca;
+  text-align: left;
+  font-size: 14px;
 }
 
 .link-button {

@@ -6,7 +6,7 @@ function Dashboard({ user, onLogout }) {
   return (
     <main className="dashboard">
       <aside className="sidebar">
-        <h2>EduGestión</h2>
+        <h2>EduGestion</h2>
 
         <div className="user-box">
           <strong>{user.nombre || user.email}</strong>
@@ -22,7 +22,7 @@ function Dashboard({ user, onLogout }) {
         </nav>
 
         <button className="logout" onClick={onLogout}>
-          Cerrar sesión
+          Cerrar sesion
         </button>
       </aside>
 
@@ -39,7 +39,7 @@ function Dashboard({ user, onLogout }) {
             <article className="module-card" key={modulo}>
               <h3>{modulo}</h3>
               <p>
-                Módulo habilitado para el rol <strong>{user.role}</strong>.
+                Modulo habilitado para el rol <strong>{user.role}</strong>.
               </p>
               <button>Entrar</button>
             </article>
