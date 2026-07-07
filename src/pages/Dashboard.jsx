@@ -5,11 +5,16 @@ function Dashboard({ user, onLogout }) {
 
   return (
     <main className="dashboard">
+
       <aside className="sidebar">
-        <h2>EduGestion</h2>
+
+        <h2>🎓 EduGestion</h2>
 
         <div className="user-box">
-          <strong>{user.nombre || user.email}</strong>
+          <strong>
+            {user.nombre || user.email}
+          </strong>
+
           <span>{user.role}</span>
         </div>
 
@@ -21,31 +26,62 @@ function Dashboard({ user, onLogout }) {
           ))}
         </nav>
 
-        <button className="logout" onClick={onLogout}>
-          Cerrar sesion
+        <button
+          className="logout"
+          onClick={onLogout}
+        >
+          Cerrar Sesión
         </button>
+
       </aside>
 
       <section className="content">
+
         <header className="topbar">
+
           <div>
-            <h1>Panel principal</h1>
-            <p>Bienvenido/a, {user.nombre || user.email}</p>
+            <h1>Panel Principal</h1>
+
+            <p>
+              Bienvenido,
+              {" "}
+              {user.nombre || user.email}
+            </p>
           </div>
+
+          {user.role === "Administrador" && (
+            <button className="admin-button">
+              ➕ Crear Usuario
+            </button>
+          )}
+
         </header>
 
         <section className="cards-grid">
+
           {modulos.map((modulo) => (
-            <article className="module-card" key={modulo}>
+            <article
+              className="module-card"
+              key={modulo}
+            >
               <h3>{modulo}</h3>
+
               <p>
-                Modulo habilitado para el rol <strong>{user.role}</strong>.
+                Módulo disponible para el rol{" "}
+                <strong>{user.role}</strong>
               </p>
-              <button>Entrar</button>
+
+              <button>
+                Ingresar
+              </button>
+
             </article>
           ))}
+
         </section>
+
       </section>
+
     </main>
   )
 }

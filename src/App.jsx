@@ -1,14 +1,11 @@
-import { useEffect, useState } from "react";
-import "./App.css";
+import { useEffect, useState } from "react"
+import "./App.css"
 
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Dashboard from "./pages/Dashboard";
-import { getCurrentUser, logout } from "./services/authService";
+import Login from "./pages/Login"
+import Dashboard from "./pages/Dashboard"
+import { getCurrentUser, logout } from "./services/authService"
 
 function App() {
-
-  const [page, setPage] = useState("login")
   const [user, setUser] = useState(null)
   const [loadingSession, setLoadingSession] = useState(true)
 
@@ -22,23 +19,22 @@ function App() {
       .finally(() => setLoadingSession(false))
   }, [])
 
-
   const handleLogin = (userData) => {
     setUser(userData)
   }
 
-
   const handleLogout = () => {
     logout()
     setUser(null)
-    setPage("login")
   }
-
 
   if (loadingSession) {
-    return <h1>Cargando...</h1>
+    return (
+      <div className="loading-screen">
+        <h1>Cargando EduGestion...</h1>
+      </div>
+    )
   }
-
 
   if (user) {
     return (
@@ -49,24 +45,11 @@ function App() {
     )
   }
 
-
   return (
     <div className="auth-container">
-      {
-        page === "login" ? (
-          <Login
-            onLogin={handleLogin}
-            goToRegister={() => setPage("register")}
-          />
-        ) : (
-          <Register
-            onRegister={handleLogin}
-            goToLogin={() => setPage("login")}
-          />
-        )
-      }
+      <Login onLogin={handleLogin} />
     </div>
   )
 }
 
-export default App;
+export default App

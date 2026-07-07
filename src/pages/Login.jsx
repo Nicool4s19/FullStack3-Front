@@ -1,22 +1,22 @@
 import { useState } from "react"
 import { getApiErrorMessage } from "../api/http"
-import { roles } from "../auth/roles"
 import { login } from "../services/authService"
 
-function Login({ onLogin, goToRegister }) {
+function Login({ onLogin }) {
   const [error, setError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+
     setError("")
     setIsSubmitting(true)
 
     const formData = new FormData(e.currentTarget)
+
     const credentials = {
       email: formData.get("email"),
       password: formData.get("password"),
-  
     }
 
     try {
@@ -31,37 +31,45 @@ function Login({ onLogin, goToRegister }) {
 
   return (
     <section className="auth-card">
-      <span className="badge">EduGestion</span>
+      <span className="badge">🎓 EduGestion</span>
 
-      <h1>Iniciar sesion</h1>
-      <p>Ingresa con tu correo y rol para acceder al sistema.</p>
+      <h1>Iniciar Sesión</h1>
+
+      <p>
+        Plataforma de gestión escolar para estudiantes,
+        docentes y administradores.
+      </p>
 
       <form onSubmit={handleSubmit}>
         <input
           name="email"
           type="email"
-          placeholder="Correo electronico"
+          placeholder="Correo electrónico"
           required
         />
 
         <input
           name="password"
           type="password"
-          placeholder="Contrasena"
+          placeholder="Contraseña"
           required
         />
 
+        {error && (
+          <p className="form-error">
+            {error}
+          </p>
+        )}
 
-        {error && <p className="form-error">{error}</p>}
-
-        <button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Conectando..." : "Entrar"}
-          <button className="link-button" onClick={goToRegister}>
-  Crear usuario
-</button>
+        <button
+          type="submit"
+          disabled={isSubmitting}
+        >
+          {isSubmitting
+            ? "Conectando..."
+            : "Ingresar"}
         </button>
       </form>
-
     </section>
   )
 }
