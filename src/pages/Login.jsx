@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { getApiErrorMessage } from "../api/http"
+import { roles } from "../auth/roles"
 import { login } from "../services/authService"
 
 function Login({ onLogin, goToRegister }) {
@@ -55,12 +56,12 @@ function Login({ onLogin, goToRegister }) {
 
         <button type="submit" disabled={isSubmitting}>
           {isSubmitting ? "Conectando..." : "Entrar"}
+          <button className="link-button" onClick={goToRegister}>
+  Crear usuario
+</button>
         </button>
       </form>
 
-      <button className="link-button" onClick={goToRegister}>
-        Crear usuario
-      </button>
     </section>
   )
 }
