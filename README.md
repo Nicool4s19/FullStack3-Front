@@ -16,13 +16,12 @@ VITE_COURSES_API_URL=https://courses.tu-dominio.com
 
 El login usa estos endpoints por defecto:
 
-- `POST /auth/login`
-- `POST /auth/register`
-- `GET /auth/me`
+- `POST /api/usuarios/login`
+- `POST /api/usuarios`
 
 Si tu backend usa rutas distintas, ajustalas en `src/services/authService.js`.
 
-La guia completa de CORS, headers y formato de respuesta esta en `docs/aws-microservices.md`.
+Si publicas el frontend en HTTPS, las APIs tambien deben estar en HTTPS y permitir CORS para el dominio del frontend.
 
 ## Scripts
 
