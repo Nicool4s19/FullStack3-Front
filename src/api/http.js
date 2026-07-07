@@ -35,10 +35,6 @@ export function createServiceClient(baseURL) {
 }
 
 export function getApiErrorMessage(error) {
-  if (error.code === "ERR_NETWORK") {
-    return "No se pudo conectar con el servidor. Revisa que la API este encendida, que permita CORS y que use HTTPS si el frontend esta publicado en HTTPS."
-  }
-
   const message =
     error.response?.data?.message ||
     error.response?.data?.error ||
