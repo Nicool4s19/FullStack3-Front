@@ -3,7 +3,7 @@ import { getApiErrorMessage } from "../api/http"
 import { roles } from "../auth/roles"
 import { register } from "../services/authService"
 
-function Register({ onRegister, goToLogin }) {
+function Register({ goToLogin }) {
   const [error, setError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
