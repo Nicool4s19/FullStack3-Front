@@ -25,29 +25,22 @@ export async function login(credentials){
 
   const {data} = await getAuthClient()
     .post(
-      "/usuarios/login",
+      "/api/usuarios/login",
       credentials
     )
 
-
   const session = {
-
-    token:data.token,
-
-    user:{
-      nombre:credentials.email,
-      email:credentials.email,
-      role:data.rol
+    token: data.token,
+    user: {
+      nombre: credentials.email,
+      email: credentials.email,
+      role: data.rol || "USER"
     }
-
   }
-
 
   saveSession(session)
 
-
   return session.user
-
 }
 
 
@@ -56,7 +49,7 @@ export async function register(payload){
 
   const {data} = await getAuthClient()
     .post(
-      "/usuarios",
+      "/api/usuarios",
       payload
     )
 

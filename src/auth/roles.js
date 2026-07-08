@@ -1,35 +1,49 @@
-export const roles = [
-  "Administrador",
-  "Docente",
-  "Apoderado",
-  "Estudiante"
-]
+export const roles = {
+  ADMIN: "Administrador",
+  DOCENTE: "Docente",
+  APODERADO: "Apoderado",
+  ESTUDIANTE: "Estudiante",
+  USER: "Usuario"
+}
+
 
 export const permisos = {
-  Administrador: [
-    "Gestion de usuarios",
+
+  ADMIN: [
+    "Gestión de usuarios",
     "Cursos",
-    "Ficha alumno",
-    "Mensajeria",
+    "Asignaturas",
+    "Mensajería",
     "Calendario",
     "Anotaciones"
   ],
 
-  Docente: [
+
+  DOCENTE: [
     "Cursos",
-    "Ficha alumno",
+    "Asignaturas",
     "Anotaciones",
     "Calendario"
   ],
 
-  Apoderado: [
+
+  APODERADO: [
     "Ficha alumno",
     "Calendario",
-    "Mensajeria"
+    "Mensajería"
   ],
 
-  Estudiante: [
+
+  ESTUDIANTE: [
     "Cursos",
-    "Calendario"
+    "Calendario",
+    "Mensajería"
+  ],
+
+
+  USER: [
+    "Cursos",
+    "Mensajería"
   ]
+
 }
