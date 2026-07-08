@@ -1,81 +1,72 @@
 import {
- BrowserRouter,
- Routes,
- Route
+  BrowserRouter,
+  Routes,
+  Route,
 } from "react-router-dom"
-
 
 import Dashboard from "../pages/Dashboard"
 import AdminDashboard from "../pages/AdminDashboard"
 import GestionUsuarios from "../pages/GestionUsuarios"
+import GestionCursos from "../pages/GestionCursos"
+import GestionAsignaturas from "../pages/GestionAsignaturas"
+import GestionMensajes from "../pages/GestionMensajes"
+import GestionAnotaciones from "../pages/GestionAnotaciones"
+import GestionCalendario from "../pages/GestionCalendario"
 
+function AppRouter({ user, onLogout }) {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            user.role === "ADMIN" ? (
+              <AdminDashboard user={user} onLogout={onLogout} />
+            ) : (
+              <Dashboard user={user} onLogout={onLogout} />
+            )
+          }
+        />
 
+        <Route
+          path="/admin"
+          element={
+            <AdminDashboard user={user} onLogout={onLogout} />
+          }
+        />
 
-function AppRouter({user,onLogout}){
+        <Route
+          path="/admin/usuarios"
+          element={<GestionUsuarios />}
+        />
 
+        <Route
+          path="/admin/cursos"
+          element={<GestionCursos />}
+        />
 
-return (
+        <Route
+          path="/admin/asignaturas"
+          element={<GestionAsignaturas />}
+        />
 
-<BrowserRouter>
+        <Route
+          path="/admin/mensajes"
+          element={<GestionMensajes />}
+        />
 
-<Routes>
+        <Route
+          path="/admin/anotaciones"
+          element={<GestionAnotaciones />}
+        />
 
-
-<Route
-path="/"
-element={
-
-user.role === "ADMIN"
-
-?
-
-<AdminDashboard
-user={user}
-onLogout={onLogout}
-/>
-
-:
-
-<Dashboard
-user={user}
-onLogout={onLogout}
-/>
-
+        <Route
+          path="/admin/calendario"
+          element={<GestionCalendario />}
+        />
+      </Routes>
+    </BrowserRouter>
+  )
 }
-
-/>
-
-
-
-<Route
-path="/admin"
-element={
-<AdminDashboard
-user={user}
-onLogout={onLogout}
-/>
-}
-/>
-
-
-
-<Route
-path="/admin/usuarios"
-element={
-<GestionUsuarios/>
-}
-/>
-
-
-
-</Routes>
-
-
-</BrowserRouter>
-
-)
-
-}
-
 
 export default AppRouter
