@@ -31,6 +31,11 @@ const modulosAdmin = [
     descripcion: "Ver eventos y actividades.",
     ruta: "/admin/calendario",
   },
+  {
+  nombre: "Reuniones",
+  descripcion: "Gestionar reuniones, citaciones y bitácora general.",
+  ruta: "/admin/reuniones",
+},
 ]
 
 function AdminDashboard({ user, onLogout }) {

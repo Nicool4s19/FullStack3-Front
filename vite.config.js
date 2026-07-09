@@ -25,6 +25,12 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      "/reuniones": {
+        target: "http://3.227.198.218:8089",
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/reuniones/, ""),
+      },
     },
   },
 })

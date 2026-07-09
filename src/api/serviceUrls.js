@@ -1,7 +1,6 @@
 const stripTrailingSlash = (url) => url?.replace(/\/+$/, "")
 
 export const serviceUrls = {
-
   auth: stripTrailingSlash(
     import.meta.env.VITE_USUARIO_API_URL
   ),
@@ -18,11 +17,12 @@ export const serviceUrls = {
     import.meta.env.VITE_ASIGNATURA_API
   ),
 
+  meetings: stripTrailingSlash(
+    import.meta.env.VITE_REUNIONES_API
+  ),
 }
 
-
 export function requireServiceUrl(serviceName) {
-
   const url = serviceUrls[serviceName]
 
   if (!url) {
