@@ -33,6 +33,9 @@ function GestionCursos() {
   const [mensaje, setMensaje] = useState("")
   const [cargando, setCargando] = useState(false)
   const [guardando, setGuardando] = useState(false)
+  const [mostrarCurso, setMostrarCurso] = useState(false)
+  const [mostrarNivel, setMostrarNivel] = useState(false)
+  const [itemAEliminar, setItemAEliminar] = useState(null)
 
   useEffect(() => {
     cargarDatos()
@@ -112,6 +115,25 @@ function GestionCursos() {
     setFormNivel(nivelInicial)
     setEditandoNivelId(null)
   }
+  function abrirNuevoNivel() {
+  limpiarNivel()
+  setMostrarNivel(true)
+  }
+
+  function cerrarNivel() {
+  limpiarNivel()
+  setMostrarNivel(false)
+  }
+
+  function abrirNuevoCurso() {
+  limpiarCurso()
+  setMostrarCurso(true)
+  }
+
+  function cerrarCurso() {
+  limpiarCurso()
+  setMostrarCurso(false)
+  }
 
   async function guardarNivel(e) {
     e.preventDefault()
@@ -140,6 +162,7 @@ function GestionCursos() {
       }
 
       limpiarNivel()
+      setMostrarNivel(false)
       await cargarNiveles()
     } catch (error) {
       setMensaje(`Error al guardar nivel: ${obtenerMensajeError(error)}`)
@@ -155,24 +178,16 @@ function GestionCursos() {
     })
 
     setMensaje("Editando nivel")
+    setMostrarNivel(true)
   }
 
-  async function borrarNivel(nivel) {
-    const confirmar = window.confirm(
-      `¿Seguro que deseas eliminar el nivel ${nivel.nombreNivel}?`
-    )
-
-    if (!confirmar) return
-
-    try {
-      await eliminarNivel(nivel.idNivel)
-      setMensaje("Nivel eliminado correctamente")
-      await cargarNiveles()
-      await cargarCursos()
-    } catch (error) {
-      setMensaje(`Error al eliminar nivel: ${obtenerMensajeError(error)}`)
-    }
-  }
+  function solicitarEliminarNivel(nivel) {
+  setItemAEliminar({
+    tipo: "nivel",
+    nombre: nivel.nombreNivel,
+    item: nivel,
+  })
+}
 
   async function guardarCurso(e) {
     e.preventDefault()
@@ -201,6 +216,7 @@ function GestionCursos() {
       }
 
       limpiarCurso()
+      setMostrarCurso(false)
       await cargarCursos()
     } catch (error) {
       setMensaje(`Error al guardar curso: ${obtenerMensajeError(error)}`)
@@ -219,32 +235,49 @@ function GestionCursos() {
     })
 
     setMensaje("Editando curso")
+    setMostrarCurso(true)
   }
 
-  async function borrarCurso(curso) {
-  const confirmar = window.confirm(
-    `¿Seguro que deseas eliminar el curso ${curso.nombreCurso}?`
-  )
+  function solicitarEliminarCurso(curso) {
+  setItemAEliminar({
+    tipo: "curso",
+    nombre: curso.nombreCurso,
+    item: curso,
+  })
+}
 
-  if (!confirmar) return
+function cancelarEliminar() {
+  setItemAEliminar(null)
+}
+
+async function confirmarEliminar() {
+  if (!itemAEliminar) return
 
   try {
     setMensaje("")
 
-    await eliminarCurso(curso.idCurso)
+    if (itemAEliminar.tipo === "nivel") {
+      await eliminarNivel(itemAEliminar.item.idNivel)
 
-    setMensaje("Curso eliminado correctamente")
-    await cargarCursos()
+      setMensaje("Nivel eliminado correctamente")
+
+      await cargarNiveles()
+      await cargarCursos()
+    }
+
+    if (itemAEliminar.tipo === "curso") {
+      await eliminarCurso(itemAEliminar.item.idCurso)
+
+      setMensaje("Curso eliminado correctamente")
+
+      await cargarCursos()
+    }
+
+    setItemAEliminar(null)
   } catch (error) {
-    console.error("Error al eliminar curso:", error)
-
-    const detalle =
-      error.response?.data?.message ||
-      error.response?.data?.error ||
-      JSON.stringify(error.response?.data) ||
-      error.message
-
-    setMensaje(`Error al eliminar curso: ${detalle}`)
+    setMensaje(
+      `Error al eliminar ${itemAEliminar.tipo}: ${obtenerMensajeError(error)}`
+    )
   }
 }
 
@@ -273,32 +306,152 @@ function GestionCursos() {
   return (
     <main className="admin-page">
       <header className="admin-header">
-        <div>
-          <h1>Gestión de Cursos</h1>
-          <p>Crear, editar, buscar y eliminar cursos.</p>
-        </div>
 
-        <Link className="back-button" to="/">
-          Volver
-        </Link>
-      </header>
+  <div>
+    <span className="page-tag">
+      PANEL ADMINISTRATIVO
+    </span>
 
-      {mensaje && <div className="alert">{mensaje}</div>}
+    <h1>📚 Gestión de Cursos</h1>
 
-      <section className="admin-form-card">
+    <p>
+      Administra cursos, niveles educativos y su organización académica.
+    </p>
+  </div>
+
+  <div className="header-buttons">
+
+    <button
+      className="new-user-btn"
+      type="button"
+      onClick={abrirNuevoNivel}
+    >
+      ➕ Nuevo Nivel
+    </button>
+
+    <button
+      className="new-user-btn"
+      type="button"
+      onClick={abrirNuevoCurso}
+    >
+      ➕ Nuevo Curso
+    </button>
+
+    <Link className="back-button" to="/">
+      ⬅ Dashboard
+    </Link>
+
+  </div>
+
+</header>
+
+      {mensaje && (
+  <div
+    className={
+      mensaje.toLowerCase().includes("error")
+        ? "alert alert-error"
+        : mensaje.toLowerCase().includes("editando") ||
+          mensaje.toLowerCase().includes("primero")
+          ? "alert alert-info"
+          : "alert alert-success"
+    }
+  >
+    <span>
+      {mensaje.toLowerCase().includes("error")
+        ? "⚠️"
+        : mensaje.toLowerCase().includes("editando") ||
+          mensaje.toLowerCase().includes("primero")
+          ? "✏️"
+          : "✅"}
+    </span>
+
+    <p>{mensaje}</p>
+  </div>
+)}
+    <section className="users-summary-grid">
+
+  <article className="users-summary-card">
+    <span>📚</span>
+    <div>
+      <h3>{cursos.length}</h3>
+      <p>Total cursos</p>
+    </div>
+  </article>
+
+  <article className="users-summary-card">
+    <span>🏫</span>
+    <div>
+      <h3>{niveles.length}</h3>
+      <p>Niveles</p>
+    </div>
+  </article>
+
+  <article className="users-summary-card">
+    <span>🔎</span>
+    <div>
+      <h3>{cursosFiltrados.length}</h3>
+      <p>Resultados</p>
+    </div>
+  </article>
+
+  <article className="users-summary-card">
+    <span>✅</span>
+    <div>
+      <h3>
+        {
+          cursos.filter((curso) => curso.nivel?.idNivel).length
+        }
+      </h3>
+      <p>Con nivel asignado</p>
+    </div>
+  </article>
+
+</section>
+
+      {mostrarNivel && (
+  <div className="modal-overlay">
+
+    <section className="admin-form-card modal-card small-modal-card">
+
+      <button
+        className="modal-close"
+        type="button"
+        onClick={cerrarNivel}
+      >
+        ✕
+      </button>
+
+      <div className="form-title-box">
+
+        <span className="page-tag">
+          {editandoNivelId ? "EDITANDO" : "NUEVO NIVEL"}
+        </span>
+
         <h2>
-          {editandoNivelId ? `Editar nivel #${editandoNivelId}` : "Crear nivel"}
+          {editandoNivelId ? `Editar nivel #${editandoNivelId}` : "Crear nuevo nivel"}
         </h2>
 
-        <form className="user-form" onSubmit={guardarNivel}>
+        <p>
+          Registra un nivel educativo para asociarlo a los cursos.
+        </p>
+
+      </div>
+
+      <form className="user-form" onSubmit={guardarNivel}>
+
+        <label className="form-field">
+          <span>Nombre del nivel</span>
           <input
             name="nombreNivel"
-            placeholder="Nombre del nivel"
+            placeholder="Ej: Básica, Media, Prekínder..."
             value={formNivel.nombreNivel}
             onChange={handleNivelChange}
             required
           />
+        </label>
 
+        <label className="form-field">
+          <span>Descripción del nivel</span>
           <input
             name="descripcionNivel"
             placeholder="Descripción del nivel"
@@ -306,81 +459,182 @@ function GestionCursos() {
             onChange={handleNivelChange}
             required
           />
+        </label>
 
-          <button type="submit">
+        <div className="form-actions full-width">
+
+          <button
+            className="save-user-btn"
+            type="submit"
+          >
             {editandoNivelId ? "Guardar nivel" : "Crear nivel"}
           </button>
 
-          {editandoNivelId && (
-            <button type="button" onClick={limpiarNivel}>
-              Cancelar edición
-            </button>
-          )}
-        </form>
-      </section>
+          <button
+            className="cancel-user-btn"
+            type="button"
+            onClick={cerrarNivel}
+          >
+            Cancelar
+          </button>
+
+        </div>
+
+      </form>
+
+    </section>
+
+  </div>
+)}
 
       <section className="admin-table-card">
-        <h2>Niveles registrados</h2>
 
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Nivel</th>
-              <th>Descripción</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
+  <div className="table-header">
+    <div>
+      <span className="page-tag">NIVELES</span>
 
-          <tbody>
-            {niveles.map((nivel) => (
-              <tr key={nivel.idNivel}>
-                <td>{nivel.idNivel}</td>
-                <td>{nivel.nombreNivel}</td>
-                <td>{nivel.descripcionNivel}</td>
-                <td>
-                  <button onClick={() => editarNivel(nivel)}>
-                    Editar
-                  </button>
+      <h2>Niveles registrados</h2>
 
-                  <button onClick={() => borrarNivel(nivel)}>
-                    Eliminar
-                  </button>
-                </td>
-              </tr>
-            ))}
+      <p>
+        Total: <strong>{niveles.length}</strong>
+      </p>
+    </div>
+  </div>
 
-            {niveles.length === 0 && (
-              <tr>
-                <td colSpan="4">No hay niveles disponibles</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </section>
+  <div className="table-responsive">
 
-      <section className="admin-form-card">
+    <table className="admin-table">
+
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nivel</th>
+          <th>Descripción</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {niveles.map((nivel) => (
+          <tr key={nivel.idNivel}>
+
+            <td>
+              <span className="id-badge">
+                #{nivel.idNivel}
+              </span>
+            </td>
+
+            <td>
+              <div className="course-title-cell">
+                <div className="user-table-avatar">
+                  {nivel.nombreNivel?.charAt(0).toUpperCase()}
+                </div>
+
+                <strong>{nivel.nombreNivel}</strong>
+              </div>
+            </td>
+
+            <td>
+              <span className="description-cell">
+                {nivel.descripcionNivel}
+              </span>
+            </td>
+
+            <td>
+              <div className="action-buttons">
+
+                <button
+                  className="edit-btn"
+                  type="button"
+                  onClick={() => editarNivel(nivel)}
+                >
+                  Editar
+                </button>
+
+                <button
+                  className="delete-btn"
+                  type="button"
+                  onClick={() => solicitarEliminarNivel(nivel)}
+                >
+                  Eliminar
+                </button>
+
+              </div>
+            </td>
+
+          </tr>
+        ))}
+
+        {niveles.length === 0 && (
+          <tr>
+            <td colSpan="4" className="empty-table">
+              No hay niveles disponibles
+            </td>
+          </tr>
+        )}
+      </tbody>
+
+    </table>
+
+  </div>
+
+</section>
+
+      {mostrarCurso && (
+  <div className="modal-overlay">
+
+    <section className="admin-form-card modal-card small-modal-card">
+
+      <button
+        className="modal-close"
+        type="button"
+        onClick={cerrarCurso}
+      >
+        ✕
+      </button>
+
+      <div className="form-title-box">
+
+        <span className="page-tag">
+          {editandoCursoId ? "EDITANDO" : "NUEVO CURSO"}
+        </span>
+
         <h2>
-          {editandoCursoId ? `Editar curso #${editandoCursoId}` : "Crear curso"}
+          {editandoCursoId ? `Editar curso #${editandoCursoId}` : "Crear nuevo curso"}
         </h2>
 
-        <form className="user-form" onSubmit={guardarCurso}>
+        <p>
+          Completa los datos del curso y asígnalo a un nivel educativo.
+        </p>
+
+      </div>
+
+      <form className="user-form" onSubmit={guardarCurso}>
+
+        <label className="form-field">
+          <span>Nombre del curso</span>
           <input
             name="nombreCurso"
-            placeholder="Nombre del curso"
+            placeholder="Ej: 4° Básico A"
             value={formCurso.nombreCurso}
             onChange={handleCursoChange}
             required
           />
+        </label>
 
+        <label className="form-field">
+          <span>Descripción del curso</span>
           <input
             name="descripcionCurso"
-            placeholder="Descripción del curso"
+            placeholder="Ej: Curso de enseñanza básica"
             value={formCurso.descripcionCurso}
             onChange={handleCursoChange}
             required
           />
+        </label>
 
+        <label className="form-field full-width">
+          <span>Nivel educativo</span>
           <select
             name="idNivel"
             value={formCurso.idNivel}
@@ -395,8 +649,15 @@ function GestionCursos() {
               </option>
             ))}
           </select>
+        </label>
 
-          <button type="submit" disabled={guardando}>
+        <div className="form-actions full-width">
+
+          <button
+            className="save-user-btn"
+            type="submit"
+            disabled={guardando}
+          >
             {guardando
               ? "Guardando..."
               : editandoCursoId
@@ -404,70 +665,195 @@ function GestionCursos() {
                 : "Crear curso"}
           </button>
 
-          {editandoCursoId && (
-            <button type="button" onClick={limpiarCurso}>
-              Cancelar edición
-            </button>
-          )}
-        </form>
-      </section>
+          <button
+            className="cancel-user-btn"
+            type="button"
+            onClick={cerrarCurso}
+          >
+            Cancelar
+          </button>
 
-      <section className="admin-table-card">
-        <div className="table-header">
-          <div>
-            <h2>Cursos registrados</h2>
-            <p>Total: {cursosFiltrados.length}</p>
-          </div>
-
-          <input
-            placeholder="Buscar curso..."
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-          />
         </div>
 
-        {cargando ? (
-          <p>Cargando cursos...</p>
-        ) : (
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Curso</th>
-                <th>Descripción</th>
-                <th>Nivel</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
+      </form>
 
-            <tbody>
-              {cursosFiltrados.map((curso) => (
-                <tr key={curso.idCurso}>
-                  <td>{curso.idCurso}</td>
-                  <td>{curso.nombreCurso}</td>
-                  <td>{curso.descripcionCurso}</td>
-                  <td>{obtenerNombreNivel(curso)}</td>
-                  <td>
-                    <button onClick={() => editarCurso(curso)}>
-                      Editar
-                    </button>
+    </section>
 
-                    <button onClick={() => borrarCurso(curso)}>
-                      Eliminar
-                    </button>
-                  </td>
-                </tr>
-              ))}
+  </div>
+)}
 
-              {cursosFiltrados.length === 0 && (
-                <tr>
-                  <td colSpan="5">No hay cursos disponibles</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        )}
-      </section>
+      <section className="admin-table-card">
+
+  <div className="table-header">
+
+    <div>
+      <span className="page-tag">CURSOS</span>
+
+      <h2>Cursos registrados</h2>
+
+      <p>
+        Total encontrados: <strong>{cursosFiltrados.length}</strong>
+      </p>
+    </div>
+
+    <div className="table-tools">
+
+      <div className="search-container">
+
+        <input
+          className="search-input"
+          type="text"
+          placeholder="🔍 Buscar por curso, nivel o descripción..."
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+        />
+
+      </div>
+
+    </div>
+
+  </div>
+
+  {cargando ? (
+    <div className="loading-box">
+      Cargando cursos...
+    </div>
+  ) : (
+    <div className="table-responsive">
+
+      <table className="admin-table">
+
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Curso</th>
+            <th>Descripción</th>
+            <th>Nivel</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {cursosFiltrados.map((curso) => (
+            <tr key={curso.idCurso}>
+
+              <td>
+                <span className="id-badge">
+                  #{curso.idCurso}
+                </span>
+              </td>
+
+              <td>
+                <div className="course-title-cell">
+
+                  <div className="course-avatar">
+                    📚
+                  </div>
+
+                  <strong>
+                    {curso.nombreCurso}
+                  </strong>
+
+                </div>
+              </td>
+
+              <td>
+                <span className="description-cell">
+                  {curso.descripcionCurso}
+                </span>
+              </td>
+
+              <td>
+                <span className="level-badge">
+                  {obtenerNombreNivel(curso)}
+                </span>
+              </td>
+
+              <td>
+                <div className="action-buttons">
+
+                  <button
+                    className="edit-btn"
+                    type="button"
+                    onClick={() => editarCurso(curso)}
+                  >
+                    Editar
+                  </button>
+
+                  <button
+                    className="delete-btn"
+                    type="button"
+                    onClick={() => solicitarEliminarCurso(curso)}
+                  >
+                    Eliminar
+                  </button>
+
+                </div>
+              </td>
+
+            </tr>
+          ))}
+
+          {cursosFiltrados.length === 0 && (
+            <tr>
+              <td colSpan="5" className="empty-table">
+                No hay cursos disponibles
+              </td>
+            </tr>
+          )}
+        </tbody>
+
+      </table>
+
+    </div>
+  )}
+
+</section>
+      {itemAEliminar && (
+  <div className="modal-overlay">
+
+    <section className="confirm-modal">
+
+      <div className="confirm-icon">
+        ⚠️
+      </div>
+
+      <h2>
+        Eliminar {itemAEliminar.tipo}
+      </h2>
+
+      <p>
+        ¿Seguro que deseas eliminar{" "}
+        <strong>
+          {itemAEliminar.nombre}
+        </strong>
+        ?
+      </p>
+
+      <div className="confirm-actions">
+
+        <button
+          className="cancel-delete-btn"
+          type="button"
+          onClick={cancelarEliminar}
+        >
+          Cancelar
+        </button>
+
+        <button
+          className="confirm-delete-btn"
+          type="button"
+          onClick={confirmarEliminar}
+        >
+          Sí, eliminar
+        </button>
+
+      </div>
+
+    </section>
+
+  </div>
+)}
     </main>
   )
 }

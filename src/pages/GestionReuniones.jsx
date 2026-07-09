@@ -53,17 +53,38 @@ function GestionReuniones() {
   const [cargando, setCargando] = useState(false)
   const [guardando, setGuardando] = useState(false)
 
+  const [mostrarReunion, setMostrarReunion] = useState(false)
+  const [mostrarCitacion, setMostrarCitacion] = useState(false)
+  const [mostrarBitacora, setMostrarBitacora] = useState(false)
+  const [itemAEliminar, setItemAEliminar] = useState(null)
+
   function normalizarFecha(fecha) {
-  if (!fecha) return ""
+    if (!fecha) return ""
 
-  const fechaConvertida = new Date(fecha)
+    const fechaConvertida = new Date(fecha)
 
-  return fechaConvertida.toISOString()
-}
+    return fechaConvertida.toISOString()
+  }
 
   function fechaParaInput(fecha) {
     if (!fecha) return ""
+
     return fecha.slice(0, 16)
+  }
+
+  function fechaVisible(fecha) {
+    if (!fecha) return "Sin fecha"
+
+    const fechaConvertida = new Date(fecha)
+
+    if (Number.isNaN(fechaConvertida.getTime())) {
+      return fecha
+    }
+
+    return fechaConvertida.toLocaleString("es-CL", {
+      dateStyle: "short",
+      timeStyle: "short",
+    })
   }
 
   function obtenerMensajeError(error) {
@@ -153,15 +174,45 @@ function GestionReuniones() {
     setEditandoBitacoraId(null)
   }
 
+  function abrirNuevaReunion() {
+    limpiarReunion()
+    setMostrarReunion(true)
+  }
+
+  function cerrarReunion() {
+    limpiarReunion()
+    setMostrarReunion(false)
+  }
+
+  function abrirNuevaCitacion() {
+    limpiarCitacion()
+    setMostrarCitacion(true)
+  }
+
+  function cerrarCitacion() {
+    limpiarCitacion()
+    setMostrarCitacion(false)
+  }
+
+  function abrirNuevaBitacora() {
+    limpiarBitacora()
+    setMostrarBitacora(true)
+  }
+
+  function cerrarBitacora() {
+    limpiarBitacora()
+    setMostrarBitacora(false)
+  }
+
   async function guardarReunion(e) {
     e.preventDefault()
 
     const payload = {
-  titulo: formReunion.titulo.trim(),
-  descripcion: formReunion.descripcion.trim(),
-  encargado: formReunion.encargado.trim(),
-  fechaReunion: normalizarFecha(formReunion.fechaReunion),
-}
+      titulo: formReunion.titulo.trim(),
+      descripcion: formReunion.descripcion.trim(),
+      encargado: formReunion.encargado.trim(),
+      fechaReunion: normalizarFecha(formReunion.fechaReunion),
+    }
 
     try {
       setGuardando(true)
@@ -176,6 +227,7 @@ function GestionReuniones() {
       }
 
       limpiarReunion()
+      setMostrarReunion(false)
       await cargarReuniones()
     } catch (error) {
       setMensaje(`Error al guardar reunión: ${obtenerMensajeError(error)}`)
@@ -195,23 +247,7 @@ function GestionReuniones() {
     })
 
     setMensaje("Editando reunión")
-  }
-
-  async function borrarReunion(reunion) {
-    const confirmar = window.confirm(
-      `¿Seguro que deseas eliminar la reunión ${reunion.titulo}?`
-    )
-
-    if (!confirmar) return
-
-    try {
-      setMensaje("")
-      await eliminarReunion(reunion.id)
-      setMensaje("Reunión eliminada correctamente")
-      await cargarReuniones()
-    } catch (error) {
-      setMensaje(`Error al eliminar reunión: ${obtenerMensajeError(error)}`)
-    }
+    setMostrarReunion(true)
   }
 
   async function guardarCitacion(e) {
@@ -237,6 +273,7 @@ function GestionReuniones() {
       }
 
       limpiarCitacion()
+      setMostrarCitacion(false)
       await cargarCitaciones()
     } catch (error) {
       setMensaje(`Error al guardar citación: ${obtenerMensajeError(error)}`)
@@ -256,23 +293,7 @@ function GestionReuniones() {
     })
 
     setMensaje("Editando citación")
-  }
-
-  async function borrarCitacion(citacion) {
-    const confirmar = window.confirm(
-      `¿Seguro que deseas eliminar la citación de ${citacion.nombreApoderado}?`
-    )
-
-    if (!confirmar) return
-
-    try {
-      setMensaje("")
-      await eliminarCitacion(citacion.id)
-      setMensaje("Citación eliminada correctamente")
-      await cargarCitaciones()
-    } catch (error) {
-      setMensaje(`Error al eliminar citación: ${obtenerMensajeError(error)}`)
-    }
+    setMostrarCitacion(true)
   }
 
   async function guardarBitacora(e) {
@@ -297,6 +318,7 @@ function GestionReuniones() {
       }
 
       limpiarBitacora()
+      setMostrarBitacora(false)
       await cargarBitacoras()
     } catch (error) {
       setMensaje(`Error al guardar bitácora: ${obtenerMensajeError(error)}`)
@@ -315,22 +337,53 @@ function GestionReuniones() {
     })
 
     setMensaje("Editando bitácora")
+    setMostrarBitacora(true)
   }
 
-  async function borrarBitacora(bitacora) {
-    const confirmar = window.confirm(
-      `¿Seguro que deseas eliminar la bitácora ${bitacora.tema}?`
-    )
+  function solicitarEliminar(tipo, item) {
+    setItemAEliminar({
+      tipo,
+      item,
+      nombre:
+        tipo === "reunión"
+          ? item.titulo
+          : tipo === "citación"
+            ? item.nombreApoderado
+            : item.tema,
+    })
+  }
 
-    if (!confirmar) return
+  function cancelarEliminar() {
+    setItemAEliminar(null)
+  }
+
+  async function confirmarEliminar() {
+    if (!itemAEliminar) return
 
     try {
       setMensaje("")
-      await eliminarBitacoraGeneral(bitacora.id)
-      setMensaje("Bitácora eliminada correctamente")
-      await cargarBitacoras()
+
+      if (itemAEliminar.tipo === "reunión") {
+        await eliminarReunion(itemAEliminar.item.id)
+        setMensaje("Reunión eliminada correctamente")
+        await cargarReuniones()
+      }
+
+      if (itemAEliminar.tipo === "citación") {
+        await eliminarCitacion(itemAEliminar.item.id)
+        setMensaje("Citación eliminada correctamente")
+        await cargarCitaciones()
+      }
+
+      if (itemAEliminar.tipo === "bitácora") {
+        await eliminarBitacoraGeneral(itemAEliminar.item.id)
+        setMensaje("Bitácora eliminada correctamente")
+        await cargarBitacoras()
+      }
+
+      setItemAEliminar(null)
     } catch (error) {
-      setMensaje(`Error al eliminar bitácora: ${obtenerMensajeError(error)}`)
+      setMensaje(`Error al eliminar ${itemAEliminar.tipo}: ${obtenerMensajeError(error)}`)
     }
   }
 
@@ -379,195 +432,578 @@ function GestionReuniones() {
 
   return (
     <main className="admin-page">
+
       <header className="admin-header">
+
         <div>
-          <h1>Gestión de Reuniones</h1>
-          <p>Reuniones, citaciones de apoderados y bitácora general.</p>
+          <span className="page-tag">
+            PANEL ADMINISTRATIVO
+          </span>
+
+          <h1>🏢 Gestión de Reuniones</h1>
+
+          <p>
+            Administra reuniones, citaciones de apoderados y bitácoras generales.
+          </p>
         </div>
 
-        <Link className="back-button" to="/">
-          Volver
-        </Link>
+        <div className="header-buttons">
+
+          <button
+            className="new-user-btn"
+            type="button"
+            onClick={abrirNuevaReunion}
+          >
+            ➕ Nueva Reunión
+          </button>
+
+          <button
+            className="new-user-btn"
+            type="button"
+            onClick={abrirNuevaCitacion}
+          >
+            ➕ Nueva Citación
+          </button>
+
+          <button
+            className="new-user-btn"
+            type="button"
+            onClick={abrirNuevaBitacora}
+          >
+            ➕ Nueva Bitácora
+          </button>
+
+          <Link className="back-button" to="/">
+            ⬅ Dashboard
+          </Link>
+
+        </div>
+
       </header>
 
       {mensaje && (
-        <div className="alert">
-          {mensaje}
+        <div
+          className={
+            mensaje.toLowerCase().includes("error")
+              ? "alert alert-error"
+              : mensaje.toLowerCase().includes("editando")
+                ? "alert alert-info"
+                : "alert alert-success"
+          }
+        >
+          <span>
+            {mensaje.toLowerCase().includes("error")
+              ? "⚠️"
+              : mensaje.toLowerCase().includes("editando")
+                ? "✏️"
+                : "✅"}
+          </span>
+
+          <p>{mensaje}</p>
         </div>
       )}
 
-      <section className="admin-form-card">
-        <h2>
-          {editandoReunionId ? `Editar reunión #${editandoReunionId}` : "Crear reunión"}
-        </h2>
+      <section className="users-summary-grid">
 
-        <form className="user-form" onSubmit={guardarReunion}>
-          <input
-            name="titulo"
-            placeholder="Título"
-            value={formReunion.titulo}
-            onChange={handleReunionChange}
-            required
-          />
+        <article className="users-summary-card">
+          <span>🏢</span>
+          <div>
+            <h3>{reuniones.length}</h3>
+            <p>Reuniones</p>
+          </div>
+        </article>
 
-          <input
-            name="descripcion"
-            placeholder="Descripción"
-            value={formReunion.descripcion}
-            onChange={handleReunionChange}
-            required
-          />
+        <article className="users-summary-card">
+          <span>👨‍👩‍👧</span>
+          <div>
+            <h3>{citaciones.length}</h3>
+            <p>Citaciones</p>
+          </div>
+        </article>
 
-          <input
-            name="encargado"
-            placeholder="Encargado"
-            value={formReunion.encargado}
-            onChange={handleReunionChange}
-            required
-          />
+        <article className="users-summary-card">
+          <span>📒</span>
+          <div>
+            <h3>{bitacoras.length}</h3>
+            <p>Bitácoras</p>
+          </div>
+        </article>
 
-          <input
-            name="fechaReunion"
-            type="datetime-local"
-            value={formReunion.fechaReunion}
-            onChange={handleReunionChange}
-            required
-          />
+        <article className="users-summary-card">
+          <span>🔎</span>
+          <div>
+            <h3>
+              {reunionesFiltradas.length + citacionesFiltradas.length + bitacorasFiltradas.length}
+            </h3>
+            <p>Resultados</p>
+          </div>
+        </article>
 
-          <button type="submit" disabled={guardando}>
-            {guardando ? "Guardando..." : editandoReunionId ? "Guardar reunión" : "Crear reunión"}
-          </button>
-
-          {editandoReunionId && (
-            <button type="button" onClick={limpiarReunion}>
-              Cancelar edición
-            </button>
-          )}
-        </form>
-      </section>
-
-      <section className="admin-form-card">
-        <h2>
-          {editandoCitacionId ? `Editar citación #${editandoCitacionId}` : "Crear citación"}
-        </h2>
-
-        <form className="user-form" onSubmit={guardarCitacion}>
-          <input
-            name="nombreApoderado"
-            placeholder="Nombre apoderado"
-            value={formCitacion.nombreApoderado}
-            onChange={handleCitacionChange}
-            required
-          />
-
-          <input
-            name="nombreEstudiante"
-            placeholder="Nombre estudiante"
-            value={formCitacion.nombreEstudiante}
-            onChange={handleCitacionChange}
-            required
-          />
-
-          <input
-            name="motivo"
-            placeholder="Motivo"
-            value={formCitacion.motivo}
-            onChange={handleCitacionChange}
-            required
-          />
-
-          <input
-            name="fechaCitacion"
-            type="datetime-local"
-            value={formCitacion.fechaCitacion}
-            onChange={handleCitacionChange}
-            required
-          />
-
-          <button type="submit" disabled={guardando}>
-            {guardando ? "Guardando..." : editandoCitacionId ? "Guardar citación" : "Crear citación"}
-          </button>
-
-          {editandoCitacionId && (
-            <button type="button" onClick={limpiarCitacion}>
-              Cancelar edición
-            </button>
-          )}
-        </form>
-      </section>
-
-      <section className="admin-form-card">
-        <h2>
-          {editandoBitacoraId ? `Editar bitácora #${editandoBitacoraId}` : "Crear bitácora general"}
-        </h2>
-
-        <form className="user-form" onSubmit={guardarBitacora}>
-          <input
-            name="tema"
-            placeholder="Tema"
-            value={formBitacora.tema}
-            onChange={handleBitacoraChange}
-            required
-          />
-
-          <input
-            name="observacion"
-            placeholder="Observación"
-            value={formBitacora.observacion}
-            onChange={handleBitacoraChange}
-            required
-          />
-
-          <input
-            name="participantes"
-            placeholder="Participantes"
-            value={formBitacora.participantes}
-            onChange={handleBitacoraChange}
-            required
-          />
-
-          <button type="submit" disabled={guardando}>
-            {guardando ? "Guardando..." : editandoBitacoraId ? "Guardar bitácora" : "Crear bitácora"}
-          </button>
-
-          {editandoBitacoraId && (
-            <button type="button" onClick={limpiarBitacora}>
-              Cancelar edición
-            </button>
-          )}
-        </form>
       </section>
 
       <section className="admin-table-card">
+
         <div className="table-header">
+
           <div>
+            <span className="page-tag">BUSCADOR</span>
+
             <h2>Buscar registros</h2>
+
             <p>
-              Reuniones: {reunionesFiltradas.length} | Citaciones: {citacionesFiltradas.length} | Bitácoras: {bitacorasFiltradas.length}
+              Reuniones: <strong>{reunionesFiltradas.length}</strong> | Citaciones:{" "}
+              <strong>{citacionesFiltradas.length}</strong> | Bitácoras:{" "}
+              <strong>{bitacorasFiltradas.length}</strong>
             </p>
           </div>
 
-          <input
-            placeholder="Buscar..."
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-          />
+          <div className="table-tools">
+
+            <div className="search-container">
+
+              <input
+                className="search-input"
+                type="text"
+                placeholder="🔍 Buscar por título, encargado, estudiante, apoderado o tema..."
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+              />
+
+            </div>
+
+          </div>
+
         </div>
+
+      </section>
+
+      {mostrarReunion && (
+        <div className="modal-overlay">
+
+          <section className="admin-form-card modal-card small-modal-card">
+
+            <button
+              className="modal-close"
+              type="button"
+              onClick={cerrarReunion}
+            >
+              ✕
+            </button>
+
+            <div className="form-title-box">
+
+              <span className="page-tag">
+                {editandoReunionId ? "EDITANDO" : "NUEVA REUNIÓN"}
+              </span>
+
+              <h2>
+                {editandoReunionId ? `Editar reunión #${editandoReunionId}` : "Crear nueva reunión"}
+              </h2>
+
+              <p>
+                Completa los datos de la reunión institucional.
+              </p>
+
+            </div>
+
+            <form className="user-form" onSubmit={guardarReunion}>
+
+              <label className="form-field">
+                <span>Título</span>
+                <input
+                  name="titulo"
+                  placeholder="Título"
+                  value={formReunion.titulo}
+                  onChange={handleReunionChange}
+                  required
+                />
+              </label>
+
+              <label className="form-field">
+                <span>Encargado</span>
+                <input
+                  name="encargado"
+                  placeholder="Encargado"
+                  value={formReunion.encargado}
+                  onChange={handleReunionChange}
+                  required
+                />
+              </label>
+
+              <label className="form-field full-width">
+                <span>Descripción</span>
+                <textarea
+                  name="descripcion"
+                  placeholder="Descripción de la reunión"
+                  value={formReunion.descripcion}
+                  onChange={handleReunionChange}
+                  required
+                />
+              </label>
+
+              <label className="form-field full-width">
+                <span>Fecha y hora</span>
+                <input
+                  name="fechaReunion"
+                  type="datetime-local"
+                  value={formReunion.fechaReunion}
+                  onChange={handleReunionChange}
+                  required
+                />
+              </label>
+
+              <div className="form-actions full-width">
+
+                <button
+                  className="save-user-btn"
+                  type="submit"
+                  disabled={guardando}
+                >
+                  {guardando ? "Guardando..." : editandoReunionId ? "Guardar reunión" : "Crear reunión"}
+                </button>
+
+                <button
+                  className="cancel-user-btn"
+                  type="button"
+                  onClick={cerrarReunion}
+                >
+                  Cancelar
+                </button>
+
+              </div>
+
+            </form>
+
+          </section>
+
+        </div>
+      )}
+
+      {mostrarCitacion && (
+        <div className="modal-overlay">
+
+          <section className="admin-form-card modal-card small-modal-card">
+
+            <button
+              className="modal-close"
+              type="button"
+              onClick={cerrarCitacion}
+            >
+              ✕
+            </button>
+
+            <div className="form-title-box">
+
+              <span className="page-tag">
+                {editandoCitacionId ? "EDITANDO" : "NUEVA CITACIÓN"}
+              </span>
+
+              <h2>
+                {editandoCitacionId ? `Editar citación #${editandoCitacionId}` : "Crear nueva citación"}
+              </h2>
+
+              <p>
+                Registra citaciones de apoderados y estudiantes.
+              </p>
+
+            </div>
+
+            <form className="user-form" onSubmit={guardarCitacion}>
+
+              <label className="form-field">
+                <span>Nombre apoderado</span>
+                <input
+                  name="nombreApoderado"
+                  placeholder="Nombre apoderado"
+                  value={formCitacion.nombreApoderado}
+                  onChange={handleCitacionChange}
+                  required
+                />
+              </label>
+
+              <label className="form-field">
+                <span>Nombre estudiante</span>
+                <input
+                  name="nombreEstudiante"
+                  placeholder="Nombre estudiante"
+                  value={formCitacion.nombreEstudiante}
+                  onChange={handleCitacionChange}
+                  required
+                />
+              </label>
+
+              <label className="form-field full-width">
+                <span>Motivo</span>
+                <textarea
+                  name="motivo"
+                  placeholder="Motivo de la citación"
+                  value={formCitacion.motivo}
+                  onChange={handleCitacionChange}
+                  required
+                />
+              </label>
+
+              <label className="form-field full-width">
+                <span>Fecha y hora</span>
+                <input
+                  name="fechaCitacion"
+                  type="datetime-local"
+                  value={formCitacion.fechaCitacion}
+                  onChange={handleCitacionChange}
+                  required
+                />
+              </label>
+
+              <div className="form-actions full-width">
+
+                <button
+                  className="save-user-btn"
+                  type="submit"
+                  disabled={guardando}
+                >
+                  {guardando ? "Guardando..." : editandoCitacionId ? "Guardar citación" : "Crear citación"}
+                </button>
+
+                <button
+                  className="cancel-user-btn"
+                  type="button"
+                  onClick={cerrarCitacion}
+                >
+                  Cancelar
+                </button>
+
+              </div>
+
+            </form>
+
+          </section>
+
+        </div>
+      )}
+
+      {mostrarBitacora && (
+        <div className="modal-overlay">
+
+          <section className="admin-form-card modal-card small-modal-card">
+
+            <button
+              className="modal-close"
+              type="button"
+              onClick={cerrarBitacora}
+            >
+              ✕
+            </button>
+
+            <div className="form-title-box">
+
+              <span className="page-tag">
+                {editandoBitacoraId ? "EDITANDO" : "NUEVA BITÁCORA"}
+              </span>
+
+              <h2>
+                {editandoBitacoraId ? `Editar bitácora #${editandoBitacoraId}` : "Crear nueva bitácora"}
+              </h2>
+
+              <p>
+                Registra observaciones generales y participantes.
+              </p>
+
+            </div>
+
+            <form className="user-form" onSubmit={guardarBitacora}>
+
+              <label className="form-field">
+                <span>Tema</span>
+                <input
+                  name="tema"
+                  placeholder="Tema"
+                  value={formBitacora.tema}
+                  onChange={handleBitacoraChange}
+                  required
+                />
+              </label>
+
+              <label className="form-field">
+                <span>Participantes</span>
+                <input
+                  name="participantes"
+                  placeholder="Participantes"
+                  value={formBitacora.participantes}
+                  onChange={handleBitacoraChange}
+                  required
+                />
+              </label>
+
+              <label className="form-field full-width">
+                <span>Observación</span>
+                <textarea
+                  name="observacion"
+                  placeholder="Observación general"
+                  value={formBitacora.observacion}
+                  onChange={handleBitacoraChange}
+                  required
+                />
+              </label>
+
+              <div className="form-actions full-width">
+
+                <button
+                  className="save-user-btn"
+                  type="submit"
+                  disabled={guardando}
+                >
+                  {guardando ? "Guardando..." : editandoBitacoraId ? "Guardar bitácora" : "Crear bitácora"}
+                </button>
+
+                <button
+                  className="cancel-user-btn"
+                  type="button"
+                  onClick={cerrarBitacora}
+                >
+                  Cancelar
+                </button>
+
+              </div>
+
+            </form>
+
+          </section>
+
+        </div>
+      )}
+
+      <section className="admin-table-card">
+
+        <div className="table-header">
+          <div>
+            <span className="page-tag">REUNIONES</span>
+            <h2>Reuniones registradas</h2>
+            <p>Total: <strong>{reunionesFiltradas.length}</strong></p>
+          </div>
+        </div>
+
+        {cargando ? (
+          <div className="loading-box">
+            Cargando...
+          </div>
+        ) : (
+          <div className="table-responsive">
+
+            <table className="admin-table">
+
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Reunión</th>
+                  <th>Descripción</th>
+                  <th>Encargado</th>
+                  <th>Fecha</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {reunionesFiltradas.map((item) => (
+                  <tr key={item.id}>
+
+                    <td>
+                      <span className="id-badge">
+                        #{item.id}
+                      </span>
+                    </td>
+
+                    <td>
+                      <div className="meeting-title-cell">
+                        <div className="meeting-avatar">
+                          🏢
+                        </div>
+
+                        <strong>{item.titulo}</strong>
+                      </div>
+                    </td>
+
+                    <td>
+                      <span className="description-cell">
+                        {item.descripcion}
+                      </span>
+                    </td>
+
+                    <td>{item.encargado}</td>
+
+                    <td>
+                      <span className="meeting-date-badge">
+                        {fechaVisible(item.fechaReunion)}
+                      </span>
+                    </td>
+
+                    <td>
+                      <span className="meeting-status-badge">
+                        {item.estado || "Sin estado"}
+                      </span>
+                    </td>
+
+                    <td>
+                      <div className="action-buttons">
+
+                        <button
+                          className="edit-btn"
+                          type="button"
+                          onClick={() => editarReunion(item)}
+                        >
+                          Editar
+                        </button>
+
+                        <button
+                          className="delete-btn"
+                          type="button"
+                          onClick={() => solicitarEliminar("reunión", item)}
+                        >
+                          Eliminar
+                        </button>
+
+                      </div>
+                    </td>
+
+                  </tr>
+                ))}
+
+                {reunionesFiltradas.length === 0 && (
+                  <tr>
+                    <td colSpan="7" className="empty-table">
+                      No hay reuniones disponibles
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+
+            </table>
+
+          </div>
+        )}
+
       </section>
 
       <section className="admin-table-card">
-        <h2>Reuniones registradas</h2>
 
-        {cargando ? (
-          <p>Cargando...</p>
-        ) : (
+        <div className="table-header">
+          <div>
+            <span className="page-tag">CITACIONES</span>
+            <h2>Citaciones registradas</h2>
+            <p>Total: <strong>{citacionesFiltradas.length}</strong></p>
+          </div>
+        </div>
+
+        <div className="table-responsive">
+
           <table className="admin-table">
+
             <thead>
               <tr>
                 <th>ID</th>
-                <th>Título</th>
-                <th>Descripción</th>
-                <th>Encargado</th>
+                <th>Apoderado</th>
+                <th>Estudiante</th>
+                <th>Motivo</th>
                 <th>Fecha</th>
                 <th>Estado</th>
                 <th>Acciones</th>
@@ -575,131 +1011,230 @@ function GestionReuniones() {
             </thead>
 
             <tbody>
-              {reunionesFiltradas.map((item) => (
+              {citacionesFiltradas.map((item) => (
                 <tr key={item.id}>
-                  <td>{item.id}</td>
-                  <td>{item.titulo}</td>
-                  <td>{item.descripcion}</td>
-                  <td>{item.encargado}</td>
-                  <td>{item.fechaReunion}</td>
-                  <td>{item.estado || "Sin estado"}</td>
-                  <td>
-                    <button onClick={() => editarReunion(item)}>
-                      Editar
-                    </button>
 
-                    <button onClick={() => borrarReunion(item)}>
-                      Eliminar
-                    </button>
+                  <td>
+                    <span className="id-badge">
+                      #{item.id}
+                    </span>
                   </td>
+
+                  <td>
+                    <div className="meeting-title-cell">
+                      <div className="citation-avatar">
+                        A
+                      </div>
+
+                      <strong>{item.nombreApoderado}</strong>
+                    </div>
+                  </td>
+
+                  <td>{item.nombreEstudiante}</td>
+
+                  <td>
+                    <span className="description-cell">
+                      {item.motivo}
+                    </span>
+                  </td>
+
+                  <td>
+                    <span className="meeting-date-badge">
+                      {fechaVisible(item.fechaCitacion)}
+                    </span>
+                  </td>
+
+                  <td>
+                    <span className="meeting-status-badge">
+                      {item.estado || "Sin estado"}
+                    </span>
+                  </td>
+
+                  <td>
+                    <div className="action-buttons">
+
+                      <button
+                        className="edit-btn"
+                        type="button"
+                        onClick={() => editarCitacion(item)}
+                      >
+                        Editar
+                      </button>
+
+                      <button
+                        className="delete-btn"
+                        type="button"
+                        onClick={() => solicitarEliminar("citación", item)}
+                      >
+                        Eliminar
+                      </button>
+
+                    </div>
+                  </td>
+
                 </tr>
               ))}
 
-              {reunionesFiltradas.length === 0 && (
+              {citacionesFiltradas.length === 0 && (
                 <tr>
-                  <td colSpan="7">
-                    No hay reuniones disponibles
+                  <td colSpan="7" className="empty-table">
+                    No hay citaciones disponibles
                   </td>
                 </tr>
               )}
             </tbody>
+
           </table>
-        )}
+
+        </div>
+
       </section>
 
       <section className="admin-table-card">
-        <h2>Citaciones registradas</h2>
 
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Apoderado</th>
-              <th>Estudiante</th>
-              <th>Motivo</th>
-              <th>Fecha</th>
-              <th>Estado</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
+        <div className="table-header">
+          <div>
+            <span className="page-tag">BITÁCORA</span>
+            <h2>Bitácora general</h2>
+            <p>Total: <strong>{bitacorasFiltradas.length}</strong></p>
+          </div>
+        </div>
 
-          <tbody>
-            {citacionesFiltradas.map((item) => (
-              <tr key={item.id}>
-                <td>{item.id}</td>
-                <td>{item.nombreApoderado}</td>
-                <td>{item.nombreEstudiante}</td>
-                <td>{item.motivo}</td>
-                <td>{item.fechaCitacion}</td>
-                <td>{item.estado || "Sin estado"}</td>
-                <td>
-                  <button onClick={() => editarCitacion(item)}>
-                    Editar
-                  </button>
+        <div className="table-responsive">
 
-                  <button onClick={() => borrarCitacion(item)}>
-                    Eliminar
-                  </button>
-                </td>
-              </tr>
-            ))}
+          <table className="admin-table">
 
-            {citacionesFiltradas.length === 0 && (
+            <thead>
               <tr>
-                <td colSpan="7">
-                  No hay citaciones disponibles
-                </td>
+                <th>ID</th>
+                <th>Tema</th>
+                <th>Observación</th>
+                <th>Participantes</th>
+                <th>Fecha registro</th>
+                <th>Acciones</th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+
+            <tbody>
+              {bitacorasFiltradas.map((item) => (
+                <tr key={item.id}>
+
+                  <td>
+                    <span className="id-badge">
+                      #{item.id}
+                    </span>
+                  </td>
+
+                  <td>
+                    <div className="meeting-title-cell">
+                      <div className="log-avatar">
+                        📒
+                      </div>
+
+                      <strong>{item.tema}</strong>
+                    </div>
+                  </td>
+
+                  <td>
+                    <span className="description-cell">
+                      {item.observacion}
+                    </span>
+                  </td>
+
+                  <td>{item.participantes}</td>
+
+                  <td>
+                    <span className="meeting-date-badge">
+                      {fechaVisible(item.fechaRegistro)}
+                    </span>
+                  </td>
+
+                  <td>
+                    <div className="action-buttons">
+
+                      <button
+                        className="edit-btn"
+                        type="button"
+                        onClick={() => editarBitacora(item)}
+                      >
+                        Editar
+                      </button>
+
+                      <button
+                        className="delete-btn"
+                        type="button"
+                        onClick={() => solicitarEliminar("bitácora", item)}
+                      >
+                        Eliminar
+                      </button>
+
+                    </div>
+                  </td>
+
+                </tr>
+              ))}
+
+              {bitacorasFiltradas.length === 0 && (
+                <tr>
+                  <td colSpan="6" className="empty-table">
+                    No hay bitácoras disponibles
+                  </td>
+                </tr>
+              )}
+            </tbody>
+
+          </table>
+
+        </div>
+
       </section>
 
-      <section className="admin-table-card">
-        <h2>Bitácora general</h2>
+      {itemAEliminar && (
+        <div className="modal-overlay">
 
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Tema</th>
-              <th>Observación</th>
-              <th>Participantes</th>
-              <th>Fecha registro</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
+          <section className="confirm-modal">
 
-          <tbody>
-            {bitacorasFiltradas.map((item) => (
-              <tr key={item.id}>
-                <td>{item.id}</td>
-                <td>{item.tema}</td>
-                <td>{item.observacion}</td>
-                <td>{item.participantes}</td>
-                <td>{item.fechaRegistro || "Sin fecha"}</td>
-                <td>
-                  <button onClick={() => editarBitacora(item)}>
-                    Editar
-                  </button>
+            <div className="confirm-icon">
+              ⚠️
+            </div>
 
-                  <button onClick={() => borrarBitacora(item)}>
-                    Eliminar
-                  </button>
-                </td>
-              </tr>
-            ))}
+            <h2>
+              Eliminar {itemAEliminar.tipo}
+            </h2>
 
-            {bitacorasFiltradas.length === 0 && (
-              <tr>
-                <td colSpan="6">
-                  No hay bitácoras disponibles
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </section>
+            <p>
+              ¿Seguro que deseas eliminar{" "}
+              <strong>
+                {itemAEliminar.nombre}
+              </strong>
+              ?
+            </p>
+
+            <div className="confirm-actions">
+
+              <button
+                className="cancel-delete-btn"
+                type="button"
+                onClick={cancelarEliminar}
+              >
+                Cancelar
+              </button>
+
+              <button
+                className="confirm-delete-btn"
+                type="button"
+                onClick={confirmarEliminar}
+              >
+                Sí, eliminar
+              </button>
+
+            </div>
+
+          </section>
+
+        </div>
+      )}
+
     </main>
   )
 }

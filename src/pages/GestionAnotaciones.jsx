@@ -22,6 +22,9 @@ function GestionAnotaciones() {
   const [cargando, setCargando] = useState(false)
   const [guardando, setGuardando] = useState(false)
 
+  const [mostrarFormulario, setMostrarFormulario] = useState(false)
+  const [anotacionAEliminar, setAnotacionAEliminar] = useState(null)
+
   const cargarAnotaciones = useCallback(async () => {
     try {
       setCargando(true)
@@ -82,6 +85,16 @@ function GestionAnotaciones() {
     setForm(anotacionInicial)
   }
 
+  function abrirFormulario() {
+    limpiarFormulario()
+    setMostrarFormulario(true)
+  }
+
+  function cerrarFormulario() {
+    limpiarFormulario()
+    setMostrarFormulario(false)
+  }
+
   async function guardarAnotacion(e) {
     e.preventDefault()
 
@@ -104,6 +117,7 @@ function GestionAnotaciones() {
 
       setMensaje("Anotación creada correctamente")
       limpiarFormulario()
+      setMostrarFormulario(false)
       await cargarAnotaciones()
     } catch (error) {
       setMensaje(`Error al crear anotación: ${obtenerMensajeError(error)}`)
@@ -112,19 +126,24 @@ function GestionAnotaciones() {
     }
   }
 
-  async function borrarAnotacion(anotacion) {
-    const confirmar = window.confirm(
-      `¿Seguro que deseas eliminar esta anotación?`
-    )
+  function solicitarEliminarAnotacion(anotacion) {
+    setAnotacionAEliminar(anotacion)
+  }
 
-    if (!confirmar) return
+  function cancelarEliminarAnotacion() {
+    setAnotacionAEliminar(null)
+  }
+
+  async function confirmarEliminarAnotacion() {
+    if (!anotacionAEliminar) return
 
     try {
       setMensaje("")
 
-      await eliminarAnotacion(anotacion.idAnotacion)
+      await eliminarAnotacion(anotacionAEliminar.idAnotacion)
 
       setMensaje("Anotación eliminada correctamente")
+      setAnotacionAEliminar(null)
       await cargarAnotaciones()
     } catch (error) {
       setMensaje(`Error al eliminar anotación: ${obtenerMensajeError(error)}`)
@@ -157,127 +176,376 @@ function GestionAnotaciones() {
 
   return (
     <main className="admin-page">
+
       <header className="admin-header">
+
         <div>
-          <h1>Gestión de Anotaciones</h1>
-          <p>Crear, buscar y eliminar anotaciones.</p>
+          <span className="page-tag">
+            PANEL ADMINISTRATIVO
+          </span>
+
+          <h1>📝 Gestión de Anotaciones</h1>
+
+          <p>
+            Administra observaciones, anotaciones y registros asociados a asignaturas.
+          </p>
         </div>
 
-        <Link className="back-button" to="/">
-          Volver
-        </Link>
+        <div className="header-buttons">
+
+          <button
+            className="new-user-btn"
+            type="button"
+            onClick={abrirFormulario}
+          >
+            ➕ Nueva Anotación
+          </button>
+
+          <Link className="back-button" to="/">
+            ⬅ Dashboard
+          </Link>
+
+        </div>
+
       </header>
 
       {mensaje && (
-        <div className="alert">
-          {mensaje}
+        <div
+          className={
+            mensaje.toLowerCase().includes("error") ||
+            mensaje.toLowerCase().includes("debes")
+              ? "alert alert-error"
+              : "alert alert-success"
+          }
+        >
+          <span>
+            {mensaje.toLowerCase().includes("error") ||
+            mensaje.toLowerCase().includes("debes")
+              ? "⚠️"
+              : "✅"}
+          </span>
+
+          <p>{mensaje}</p>
         </div>
       )}
 
-      <section className="admin-form-card">
-        <h2>Crear anotación</h2>
+      <section className="users-summary-grid">
 
-        <form className="user-form" onSubmit={guardarAnotacion}>
-          <input
-            name="estudiante"
-            placeholder="Nombre del estudiante"
-            value={form.estudiante}
-            onChange={handleChange}
-            required
-          />
+        <article className="users-summary-card">
+          <span>📝</span>
+          <div>
+            <h3>{anotaciones.length}</h3>
+            <p>Total anotaciones</p>
+          </div>
+        </article>
 
-          <input
-            name="descripcion"
-            placeholder="Descripción de la anotación"
-            value={form.descripcion}
-            onChange={handleChange}
-            required
-          />
+        <article className="users-summary-card">
+          <span>📖</span>
+          <div>
+            <h3>{asignaturas.length}</h3>
+            <p>Asignaturas</p>
+          </div>
+        </article>
 
-          <select
-            name="idAsignatura"
-            value={form.idAsignatura}
-            onChange={handleChange}
-            required
-          >
-            <option value="">
-              Selecciona asignatura
-            </option>
+        <article className="users-summary-card">
+          <span>🔎</span>
+          <div>
+            <h3>{anotacionesFiltradas.length}</h3>
+            <p>Resultados</p>
+          </div>
+        </article>
 
-            {asignaturas.map((asignatura) => (
-              <option
-                key={asignatura.idAsignatura}
-                value={asignatura.idAsignatura}
-              >
-                {asignatura.nombre} - {asignatura.codigo}
-              </option>
-            ))}
-          </select>
+        <article className="users-summary-card">
+          <span>📅</span>
+          <div>
+            <h3>
+              {anotaciones.filter((a) => a.fecha).length}
+            </h3>
+            <p>Con fecha</p>
+          </div>
+        </article>
 
-          <button type="submit" disabled={guardando}>
-            {guardando ? "Guardando..." : "Crear anotación"}
-          </button>
-        </form>
       </section>
 
+      {mostrarFormulario && (
+        <div className="modal-overlay">
+
+          <section className="admin-form-card modal-card small-modal-card">
+
+            <button
+              className="modal-close"
+              type="button"
+              onClick={cerrarFormulario}
+            >
+              ✕
+            </button>
+
+            <div className="form-title-box">
+
+              <span className="page-tag">
+                NUEVA ANOTACIÓN
+              </span>
+
+              <h2>Crear nueva anotación</h2>
+
+              <p>
+                Completa los datos del estudiante, la descripción y la asignatura.
+              </p>
+
+            </div>
+
+            <form className="user-form" onSubmit={guardarAnotacion}>
+
+              <label className="form-field">
+                <span>Estudiante</span>
+                <input
+                  name="estudiante"
+                  placeholder="Nombre del estudiante"
+                  value={form.estudiante}
+                  onChange={handleChange}
+                  required
+                />
+              </label>
+
+              <label className="form-field">
+                <span>Asignatura</span>
+                <select
+                  name="idAsignatura"
+                  value={form.idAsignatura}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">
+                    Selecciona asignatura
+                  </option>
+
+                  {asignaturas.map((asignatura) => (
+                    <option
+                      key={asignatura.idAsignatura}
+                      value={asignatura.idAsignatura}
+                    >
+                      {asignatura.nombre} - {asignatura.codigo}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="form-field full-width">
+                <span>Descripción</span>
+                <textarea
+                  name="descripcion"
+                  placeholder="Describe la anotación del estudiante..."
+                  value={form.descripcion}
+                  onChange={handleChange}
+                  required
+                />
+              </label>
+
+              <div className="form-actions full-width">
+
+                <button
+                  className="save-user-btn"
+                  type="submit"
+                  disabled={guardando}
+                >
+                  {guardando ? "Guardando..." : "Crear anotación"}
+                </button>
+
+                <button
+                  className="cancel-user-btn"
+                  type="button"
+                  onClick={cerrarFormulario}
+                >
+                  Cancelar
+                </button>
+
+              </div>
+
+            </form>
+
+          </section>
+
+        </div>
+      )}
+
       <section className="admin-table-card">
+
         <div className="table-header">
+
           <div>
+            <span className="page-tag">ANOTACIONES</span>
+
             <h2>Anotaciones registradas</h2>
-            <p>Total: {anotacionesFiltradas.length}</p>
+
+            <p>
+              Total encontradas: <strong>{anotacionesFiltradas.length}</strong>
+            </p>
           </div>
 
-          <input
-            placeholder="Buscar anotación..."
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-          />
+          <div className="table-tools">
+
+            <div className="search-container">
+
+              <input
+                className="search-input"
+                type="text"
+                placeholder="🔍 Buscar por estudiante, asignatura, fecha o descripción..."
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+              />
+
+            </div>
+
+          </div>
+
         </div>
 
         {cargando ? (
-          <p>Cargando anotaciones...</p>
+          <div className="loading-box">
+            Cargando anotaciones...
+          </div>
         ) : (
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Estudiante</th>
-                <th>Descripción</th>
-                <th>Tipo</th>
-                <th>Fecha</th>
-                <th>Asignatura</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
+          <div className="table-responsive">
 
-            <tbody>
-              {anotacionesFiltradas.map((anotacion) => (
-                <tr key={anotacion.idAnotacion}>
-                  <td>{anotacion.idAnotacion}</td>
-                  <td>{anotacion.estudiante}</td>
-                  <td>{anotacion.descripcion}</td>
-                  <td>{anotacion.tipo || "Sin tipo"}</td>
-                  <td>{anotacion.fecha || "Sin fecha"}</td>
-                  <td>{obtenerNombreAsignatura(anotacion)}</td>
-                  <td>
-                    <button onClick={() => borrarAnotacion(anotacion)}>
-                      Eliminar
-                    </button>
-                  </td>
-                </tr>
-              ))}
+            <table className="admin-table">
 
-              {anotacionesFiltradas.length === 0 && (
+              <thead>
                 <tr>
-                  <td colSpan="7">
-                    No hay anotaciones disponibles
-                  </td>
+                  <th>ID</th>
+                  <th>Estudiante</th>
+                  <th>Descripción</th>
+                  <th>Tipo</th>
+                  <th>Fecha</th>
+                  <th>Asignatura</th>
+                  <th>Acciones</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+
+              <tbody>
+                {anotacionesFiltradas.map((anotacion) => (
+                  <tr key={anotacion.idAnotacion}>
+
+                    <td>
+                      <span className="id-badge">
+                        #{anotacion.idAnotacion}
+                      </span>
+                    </td>
+
+                    <td>
+                      <div className="course-title-cell">
+
+                        <div className="annotation-avatar">
+                          {anotacion.estudiante?.charAt(0).toUpperCase() || "E"}
+                        </div>
+
+                        <strong>
+                          {anotacion.estudiante}
+                        </strong>
+
+                      </div>
+                    </td>
+
+                    <td>
+                      <span className="description-cell">
+                        {anotacion.descripcion}
+                      </span>
+                    </td>
+
+                    <td>
+                      <span className="annotation-type-badge">
+                        {anotacion.tipo || "Sin tipo"}
+                      </span>
+                    </td>
+
+                    <td>
+                      <span className="annotation-date-badge">
+                        {anotacion.fecha || "Sin fecha"}
+                      </span>
+                    </td>
+
+                    <td>
+                      <span className="subject-code-badge">
+                        {obtenerNombreAsignatura(anotacion)}
+                      </span>
+                    </td>
+
+                    <td>
+                      <div className="action-buttons">
+
+                        <button
+                          className="delete-btn"
+                          type="button"
+                          onClick={() => solicitarEliminarAnotacion(anotacion)}
+                        >
+                          Eliminar
+                        </button>
+
+                      </div>
+                    </td>
+
+                  </tr>
+                ))}
+
+                {anotacionesFiltradas.length === 0 && (
+                  <tr>
+                    <td colSpan="7" className="empty-table">
+                      No hay anotaciones disponibles
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+
+            </table>
+
+          </div>
         )}
+
       </section>
+
+      {anotacionAEliminar && (
+        <div className="modal-overlay">
+
+          <section className="confirm-modal">
+
+            <div className="confirm-icon">
+              ⚠️
+            </div>
+
+            <h2>Eliminar anotación</h2>
+
+            <p>
+              ¿Seguro que deseas eliminar esta anotación de{" "}
+              <strong>
+                {anotacionAEliminar.estudiante}
+              </strong>
+              ?
+            </p>
+
+            <div className="confirm-actions">
+
+              <button
+                className="cancel-delete-btn"
+                type="button"
+                onClick={cancelarEliminarAnotacion}
+              >
+                Cancelar
+              </button>
+
+              <button
+                className="confirm-delete-btn"
+                type="button"
+                onClick={confirmarEliminarAnotacion}
+              >
+                Sí, eliminar
+              </button>
+
+            </div>
+
+          </section>
+
+        </div>
+      )}
+
     </main>
   )
 }

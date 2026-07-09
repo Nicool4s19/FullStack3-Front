@@ -1,100 +1,65 @@
-import { Link } from "react-router-dom"
+import { Link } from "react-router-dom";
+import {
+  Users, BookOpen, GraduationCap, MessageSquare,
+  CalendarDays, ClipboardList, Building2,
+  UserPlus, Bell, Search, LogOut, Home
+} from "lucide-react";
 
 const modulosAdmin = [
-  {
-    nombre: "Gestión de usuarios",
-    descripcion: "Crear, editar y eliminar usuarios.",
-    ruta: "/admin/usuarios",
-  },
-  {
-    nombre: "Cursos",
-    descripcion: "Administrar cursos del sistema.",
-    ruta: "/admin/cursos",
-  },
-  {
-    nombre: "Asignaturas",
-    descripcion: "Administrar asignaturas.",
-    ruta: "/admin/asignaturas",
-  },
-  {
-    nombre: "Mensajería",
-    descripcion: "Revisar y administrar mensajes.",
-    ruta: "/admin/mensajes",
-  },
-  {
-    nombre: "Anotaciones",
-    descripcion: "Gestionar anotaciones y bitácoras.",
-    ruta: "/admin/anotaciones",
-  },
-  {
-    nombre: "Calendario",
-    descripcion: "Ver eventos y actividades.",
-    ruta: "/admin/calendario",
-  },
-  {
-  nombre: "Reuniones",
-  descripcion: "Gestionar reuniones, citaciones y bitácora general.",
-  ruta: "/admin/reuniones",
-},
-{
-  nombre: "Portal Informativo",
-  descripcion: "Gestionar mural digital y calendario estudiantil.",
-  ruta: "/admin/portal",
-},
-]
+ {nombre:"Gestión de usuarios",descripcion:"Crear, editar y administrar usuarios.",ruta:"/admin/usuarios",icono:Users},
+ {nombre:"Cursos",descripcion:"Administrar cursos.",ruta:"/admin/cursos",icono:BookOpen},
+ {nombre:"Asignaturas",descripcion:"Administrar asignaturas.",ruta:"/admin/asignaturas",icono:GraduationCap},
+ {nombre:"Mensajería",descripcion:"Comunicación interna.",ruta:"/admin/mensajes",icono:MessageSquare},
+ {nombre:"Anotaciones",descripcion:"Bitácoras y observaciones.",ruta:"/admin/anotaciones",icono:ClipboardList},
+ {nombre:"Calendario",descripcion:"Eventos y actividades.",ruta:"/admin/calendario",icono:CalendarDays},
+ {nombre:"Reuniones",descripcion:"Gestionar reuniones.",ruta:"/admin/reuniones",icono:Building2},
+ {nombre:"Portal Informativo",descripcion:"Mural digital.",ruta:"/admin/portal",icono:Bell},
+];
 
-function AdminDashboard({ user, onLogout }) {
-  return (
-    <main className="dashboard">
-      <aside className="sidebar">
-        <h2>EduGestion Admin</h2>
+export default function AdminDashboard({user,onLogout}){
+return(
+<main className="dashboard">
+<aside className="sidebar">
+<div className="logo-box"><Home size={34}/><div><h2>EduGestion</h2><span>Sistema Escolar</span></div></div>
+<div className="user-box">
 
-        <div className="user-box">
-          <strong>{user.nombre || user.email}</strong>
-          <span>Administrador</span>
-        </div>
+    <div className="avatar-circle">
+        {(user.nombre || user.email).charAt(0).toUpperCase()}
+    </div>
 
-        <nav>
-          {modulosAdmin.map((modulo) => (
-            <Link key={modulo.nombre} to={modulo.ruta}>
-              {modulo.nombre}
-            </Link>
-          ))}
-        </nav>
+    <div className="user-info">
 
-        <button className="logout" onClick={onLogout}>
-          Cerrar Sesión
-        </button>
-      </aside>
+        <h3>{user.nombre || user.email}</h3>
 
-      <section className="content">
-        <header className="topbar">
-          <div>
-            <h1>Panel Administrador</h1>
-            <p>Control total del sistema EduGestion.</p>
-          </div>
+        <p>Administrador General</p>
 
-          <Link className="admin-button" to="/admin/usuarios">
-            Crear usuario
-          </Link>
-        </header>
+    </div>
 
-        <section className="cards-grid">
-          {modulosAdmin.map((modulo) => (
-            <article className="module-card" key={modulo.nombre}>
-              <h3>{modulo.nombre}</h3>
-
-              <p>{modulo.descripcion}</p>
-
-              <Link to={modulo.ruta}>
-                Ingresar
-              </Link>
-            </article>
-          ))}
-        </section>
-      </section>
-    </main>
-  )
-}
-
-export default AdminDashboard
+</div>
+<nav>{modulosAdmin.map(m=>{const I=m.icono;return <Link key={m.nombre} to={m.ruta}><I size={20}/>{m.nombre}</Link>})}</nav>
+<button className="logout" onClick={onLogout}><LogOut size={18}/>Cerrar sesión</button>
+</aside>
+<section className="content">
+<header className="dashboard-header">
+<div><h1>Panel Administrativo</h1><p>Bienvenido <strong>{user.nombre||"Administrador"}</strong></p></div>
+<div className="header-actions">
+<div className="search-box"><Search size={18}/><input placeholder="Buscar..."/></div>
+<Link className="admin-button" to="/admin/usuarios"><UserPlus size={18}/>Nuevo Usuario</Link>
+</div>
+</header>
+<section className="stats-grid">
+{[
+["Usuarios","126",Users],["Cursos","18",BookOpen],["Asignaturas","42",GraduationCap],["Eventos","9",CalendarDays]
+].map(([t,n,I])=><div className="stat-card" key={t}><I size={28}/><h3>{t}</h3><span>{n}</span></div>)}
+</section>
+<section className="cards-grid">
+{modulosAdmin.map(m=>{const I=m.icono;return <article className="module-card" key={m.nombre}>
+<div className="module-icon"><I size={28}/></div>
+<h3>{m.nombre}</h3>
+<p>{m.descripcion}</p>
+<Link className="module-button" to={m.ruta}>Abrir módulo</Link>
+</article>})}
+</section>
+</section>
+</main>
+)}
