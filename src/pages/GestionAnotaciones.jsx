@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react"
 import { Link } from "react-router-dom"
+
 import {
   listarAsignaturas,
   listarAnotaciones,
@@ -7,13 +8,17 @@ import {
   eliminarAnotacion,
 } from "../services/asignaturaService"
 
+import { canManageAnnotations } from "../auth/roles"
+
 const anotacionInicial = {
   estudiante: "",
   descripcion: "",
   idAsignatura: "",
 }
 
-function GestionAnotaciones() {
+function GestionAnotaciones({ user }) {
+  const puedeGestionarAnotaciones = canManageAnnotations(user?.role)
+
   const [anotaciones, setAnotaciones] = useState([])
   const [asignaturas, setAsignaturas] = useState([])
   const [form, setForm] = useState(anotacionInicial)
@@ -86,6 +91,8 @@ function GestionAnotaciones() {
   }
 
   function abrirFormulario() {
+    if (!puedeGestionarAnotaciones) return
+
     limpiarFormulario()
     setMostrarFormulario(true)
   }
@@ -97,6 +104,11 @@ function GestionAnotaciones() {
 
   async function guardarAnotacion(e) {
     e.preventDefault()
+
+    if (!puedeGestionarAnotaciones) {
+      setMensaje("No tienes permiso para crear anotaciones")
+      return
+    }
 
     if (!form.idAsignatura) {
       setMensaje("Debes seleccionar una asignatura")
@@ -127,6 +139,8 @@ function GestionAnotaciones() {
   }
 
   function solicitarEliminarAnotacion(anotacion) {
+    if (!puedeGestionarAnotaciones) return
+
     setAnotacionAEliminar(anotacion)
   }
 
@@ -135,7 +149,7 @@ function GestionAnotaciones() {
   }
 
   async function confirmarEliminarAnotacion() {
-    if (!anotacionAEliminar) return
+    if (!anotacionAEliminar || !puedeGestionarAnotaciones) return
 
     try {
       setMensaje("")
@@ -176,51 +190,54 @@ function GestionAnotaciones() {
 
   return (
     <main className="admin-page">
-
       <header className="admin-header">
-
         <div>
-          <span className="page-tag">
-            PANEL ADMINISTRATIVO
-          </span>
+          <span className="page-tag">ANOTACIONES</span>
 
           <h1>📝 Gestión de Anotaciones</h1>
 
           <p>
-            Administra observaciones, anotaciones y registros asociados a asignaturas.
+            Revisa observaciones, anotaciones y registros asociados a asignaturas.
           </p>
+
+          {!puedeGestionarAnotaciones && (
+            <p className="readonly-message">
+              Vista de solo lectura para tu rol.
+            </p>
+          )}
         </div>
 
         <div className="header-buttons">
-
-          <button
-            className="new-user-btn"
-            type="button"
-            onClick={abrirFormulario}
-          >
-            ➕ Nueva Anotación
-          </button>
+          {puedeGestionarAnotaciones && (
+            <button
+              className="new-user-btn"
+              type="button"
+              onClick={abrirFormulario}
+            >
+              ➕ Nueva Anotación
+            </button>
+          )}
 
           <Link className="back-button" to="/">
             ⬅ Dashboard
           </Link>
-
         </div>
-
       </header>
 
       {mensaje && (
         <div
           className={
             mensaje.toLowerCase().includes("error") ||
-            mensaje.toLowerCase().includes("debes")
+            mensaje.toLowerCase().includes("debes") ||
+            mensaje.toLowerCase().includes("no tienes")
               ? "alert alert-error"
               : "alert alert-success"
           }
         >
           <span>
             {mensaje.toLowerCase().includes("error") ||
-            mensaje.toLowerCase().includes("debes")
+            mensaje.toLowerCase().includes("debes") ||
+            mensaje.toLowerCase().includes("no tienes")
               ? "⚠️"
               : "✅"}
           </span>
@@ -230,7 +247,6 @@ function GestionAnotaciones() {
       )}
 
       <section className="users-summary-grid">
-
         <article className="users-summary-card">
           <span>📝</span>
           <div>
@@ -258,20 +274,15 @@ function GestionAnotaciones() {
         <article className="users-summary-card">
           <span>📅</span>
           <div>
-            <h3>
-              {anotaciones.filter((a) => a.fecha).length}
-            </h3>
+            <h3>{anotaciones.filter((a) => a.fecha).length}</h3>
             <p>Con fecha</p>
           </div>
         </article>
-
       </section>
 
-      {mostrarFormulario && (
+      {mostrarFormulario && puedeGestionarAnotaciones && (
         <div className="modal-overlay">
-
           <section className="admin-form-card modal-card small-modal-card">
-
             <button
               className="modal-close"
               type="button"
@@ -281,23 +292,19 @@ function GestionAnotaciones() {
             </button>
 
             <div className="form-title-box">
-
-              <span className="page-tag">
-                NUEVA ANOTACIÓN
-              </span>
+              <span className="page-tag">NUEVA ANOTACIÓN</span>
 
               <h2>Crear nueva anotación</h2>
 
               <p>
                 Completa los datos del estudiante, la descripción y la asignatura.
               </p>
-
             </div>
 
             <form className="user-form" onSubmit={guardarAnotacion}>
-
               <label className="form-field">
                 <span>Estudiante</span>
+
                 <input
                   name="estudiante"
                   placeholder="Nombre del estudiante"
@@ -309,15 +316,14 @@ function GestionAnotaciones() {
 
               <label className="form-field">
                 <span>Asignatura</span>
+
                 <select
                   name="idAsignatura"
                   value={form.idAsignatura}
                   onChange={handleChange}
                   required
                 >
-                  <option value="">
-                    Selecciona asignatura
-                  </option>
+                  <option value="">Selecciona asignatura</option>
 
                   {asignaturas.map((asignatura) => (
                     <option
@@ -332,6 +338,7 @@ function GestionAnotaciones() {
 
               <label className="form-field full-width">
                 <span>Descripción</span>
+
                 <textarea
                   name="descripcion"
                   placeholder="Describe la anotación del estudiante..."
@@ -342,7 +349,6 @@ function GestionAnotaciones() {
               </label>
 
               <div className="form-actions full-width">
-
                 <button
                   className="save-user-btn"
                   type="submit"
@@ -358,20 +364,14 @@ function GestionAnotaciones() {
                 >
                   Cancelar
                 </button>
-
               </div>
-
             </form>
-
           </section>
-
         </div>
       )}
 
       <section className="admin-table-card">
-
         <div className="table-header">
-
           <div>
             <span className="page-tag">ANOTACIONES</span>
 
@@ -383,9 +383,7 @@ function GestionAnotaciones() {
           </div>
 
           <div className="table-tools">
-
             <div className="search-container">
-
               <input
                 className="search-input"
                 type="text"
@@ -393,22 +391,15 @@ function GestionAnotaciones() {
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
               />
-
             </div>
-
           </div>
-
         </div>
 
         {cargando ? (
-          <div className="loading-box">
-            Cargando anotaciones...
-          </div>
+          <div className="loading-box">Cargando anotaciones...</div>
         ) : (
           <div className="table-responsive">
-
             <table className="admin-table">
-
               <thead>
                 <tr>
                   <th>ID</th>
@@ -417,14 +408,14 @@ function GestionAnotaciones() {
                   <th>Tipo</th>
                   <th>Fecha</th>
                   <th>Asignatura</th>
-                  <th>Acciones</th>
+
+                  {puedeGestionarAnotaciones && <th>Acciones</th>}
                 </tr>
               </thead>
 
               <tbody>
                 {anotacionesFiltradas.map((anotacion) => (
                   <tr key={anotacion.idAnotacion}>
-
                     <td>
                       <span className="id-badge">
                         #{anotacion.idAnotacion}
@@ -433,15 +424,11 @@ function GestionAnotaciones() {
 
                     <td>
                       <div className="course-title-cell">
-
                         <div className="annotation-avatar">
                           {anotacion.estudiante?.charAt(0).toUpperCase() || "E"}
                         </div>
 
-                        <strong>
-                          {anotacion.estudiante}
-                        </strong>
-
+                        <strong>{anotacion.estudiante}</strong>
                       </div>
                     </td>
 
@@ -469,60 +456,53 @@ function GestionAnotaciones() {
                       </span>
                     </td>
 
-                    <td>
-                      <div className="action-buttons">
-
-                        <button
-                          className="delete-btn"
-                          type="button"
-                          onClick={() => solicitarEliminarAnotacion(anotacion)}
-                        >
-                          Eliminar
-                        </button>
-
-                      </div>
-                    </td>
-
+                    {puedeGestionarAnotaciones && (
+                      <td>
+                        <div className="action-buttons">
+                          <button
+                            className="delete-btn"
+                            type="button"
+                            onClick={() =>
+                              solicitarEliminarAnotacion(anotacion)
+                            }
+                          >
+                            Eliminar
+                          </button>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))}
 
                 {anotacionesFiltradas.length === 0 && (
                   <tr>
-                    <td colSpan="7" className="empty-table">
+                    <td
+                      colSpan={puedeGestionarAnotaciones ? "7" : "6"}
+                      className="empty-table"
+                    >
                       No hay anotaciones disponibles
                     </td>
                   </tr>
                 )}
               </tbody>
-
             </table>
-
           </div>
         )}
-
       </section>
 
-      {anotacionAEliminar && (
+      {anotacionAEliminar && puedeGestionarAnotaciones && (
         <div className="modal-overlay">
-
           <section className="confirm-modal">
-
-            <div className="confirm-icon">
-              ⚠️
-            </div>
+            <div className="confirm-icon">⚠️</div>
 
             <h2>Eliminar anotación</h2>
 
             <p>
               ¿Seguro que deseas eliminar esta anotación de{" "}
-              <strong>
-                {anotacionAEliminar.estudiante}
-              </strong>
-              ?
+              <strong>{anotacionAEliminar.estudiante}</strong>?
             </p>
 
             <div className="confirm-actions">
-
               <button
                 className="cancel-delete-btn"
                 type="button"
@@ -538,14 +518,10 @@ function GestionAnotaciones() {
               >
                 Sí, eliminar
               </button>
-
             </div>
-
           </section>
-
         </div>
       )}
-
     </main>
   )
 }

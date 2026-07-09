@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
+
 import {
   listarMensajes,
   crearMensaje,
   eliminarMensaje,
   marcarMensajeComoLeido,
 } from "../services/mensajeService"
+
 import { listarUsuarios } from "../services/usuarioService"
+import { canDeleteMessages } from "../auth/roles"
 
 const mensajeInicial = {
   idRemitente: "",
@@ -15,7 +18,9 @@ const mensajeInicial = {
   contenidoMensaje: "",
 }
 
-function GestionMensajes() {
+function GestionMensajes({ user }) {
+  const puedeEliminarMensajes = canDeleteMessages(user?.role)
+
   const [mensajes, setMensajes] = useState([])
   const [usuarios, setUsuarios] = useState([])
   const [form, setForm] = useState(mensajeInicial)
@@ -137,7 +142,9 @@ function GestionMensajes() {
 
     try {
       setMensajeSistema("")
+
       await marcarMensajeComoLeido(id)
+
       setMensajeSistema("Mensaje marcado como leído")
       await cargarMensajes()
     } catch (error) {
@@ -146,6 +153,8 @@ function GestionMensajes() {
   }
 
   function solicitarEliminarMensaje(mensaje) {
+    if (!puedeEliminarMensajes) return
+
     setMensajeAEliminar(mensaje)
   }
 
@@ -154,7 +163,7 @@ function GestionMensajes() {
   }
 
   async function confirmarEliminarMensaje() {
-    if (!mensajeAEliminar) return
+    if (!mensajeAEliminar || !puedeEliminarMensajes) return
 
     const id = obtenerIdMensaje(mensajeAEliminar)
 
@@ -246,29 +255,36 @@ function GestionMensajes() {
     return texto.includes(busqueda.toLowerCase())
   })
 
-  const mensajesLeidos = mensajes.filter((mensaje) => estaLeido(mensaje).toLowerCase() === "leído").length
+  const mensajesLeidos = mensajes.filter(
+    (mensaje) => estaLeido(mensaje).toLowerCase() === "leído"
+  ).length
 
-  const mensajesNoLeidos = mensajes.filter((mensaje) => estaLeido(mensaje).toLowerCase() === "no leído").length
+  const mensajesNoLeidos = mensajes.filter(
+    (mensaje) => estaLeido(mensaje).toLowerCase() === "no leído"
+  ).length
+
+  const columnasTabla = puedeEliminarMensajes ? 8 : 8
 
   return (
     <main className="admin-page">
-
       <header className="admin-header">
-
         <div>
-          <span className="page-tag">
-            PANEL ADMINISTRATIVO
-          </span>
+          <span className="page-tag">MENSAJERÍA</span>
 
           <h1>💬 Gestión de Mensajería</h1>
 
           <p>
-            Crea, revisa, marca como leído y elimina mensajes del sistema.
+            Crea, revisa y marca mensajes como leídos.
           </p>
+
+          {!puedeEliminarMensajes && (
+            <p className="readonly-message">
+              Tu rol no puede eliminar mensajes.
+            </p>
+          )}
         </div>
 
         <div className="header-buttons">
-
           <button
             className="new-user-btn"
             type="button"
@@ -280,9 +296,7 @@ function GestionMensajes() {
           <Link className="back-button" to="/">
             ⬅ Dashboard
           </Link>
-
         </div>
-
       </header>
 
       {mensajeSistema && (
@@ -306,7 +320,6 @@ function GestionMensajes() {
       )}
 
       <section className="users-summary-grid">
-
         <article className="users-summary-card">
           <span>💬</span>
           <div>
@@ -338,14 +351,11 @@ function GestionMensajes() {
             <p>Usuarios</p>
           </div>
         </article>
-
       </section>
 
       {mostrarFormulario && (
         <div className="modal-overlay">
-
           <section className="admin-form-card modal-card small-modal-card">
-
             <button
               className="modal-close"
               type="button"
@@ -355,21 +365,16 @@ function GestionMensajes() {
             </button>
 
             <div className="form-title-box">
-
-              <span className="page-tag">
-                NUEVO MENSAJE
-              </span>
+              <span className="page-tag">NUEVO MENSAJE</span>
 
               <h2>Crear nuevo mensaje</h2>
 
               <p>
                 Selecciona remitente, destinatario y escribe el contenido del mensaje.
               </p>
-
             </div>
 
             <form className="user-form" onSubmit={guardarMensaje}>
-
               <label className="form-field">
                 <span>Remitente</span>
 
@@ -433,7 +438,6 @@ function GestionMensajes() {
               </label>
 
               <div className="form-actions full-width">
-
                 <button
                   className="save-user-btn"
                   type="submit"
@@ -449,20 +453,14 @@ function GestionMensajes() {
                 >
                   Cancelar
                 </button>
-
               </div>
-
             </form>
-
           </section>
-
         </div>
       )}
 
       <section className="admin-table-card">
-
         <div className="table-header">
-
           <div>
             <span className="page-tag">MENSAJES</span>
 
@@ -474,9 +472,7 @@ function GestionMensajes() {
           </div>
 
           <div className="table-tools">
-
             <div className="search-container">
-
               <input
                 className="search-input"
                 type="text"
@@ -484,22 +480,15 @@ function GestionMensajes() {
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
               />
-
             </div>
-
           </div>
-
         </div>
 
         {cargando ? (
-          <div className="loading-box">
-            Cargando mensajes...
-          </div>
+          <div className="loading-box">Cargando mensajes...</div>
         ) : (
           <div className="table-responsive">
-
             <table className="admin-table">
-
               <thead>
                 <tr>
                   <th>ID</th>
@@ -516,7 +505,6 @@ function GestionMensajes() {
               <tbody>
                 {mensajesFiltrados.map((mensaje) => (
                   <tr key={obtenerIdMensaje(mensaje)}>
-
                     <td>
                       <span className="id-badge">
                         #{obtenerIdMensaje(mensaje)}
@@ -525,9 +513,7 @@ function GestionMensajes() {
 
                     <td>
                       <div className="message-user-cell">
-                        <div className="message-avatar">
-                          R
-                        </div>
+                        <div className="message-avatar">R</div>
 
                         <strong>
                           {obtenerNombreUsuario(obtenerIdRemitente(mensaje))}
@@ -579,7 +565,6 @@ function GestionMensajes() {
 
                     <td>
                       <div className="action-buttons">
-
                         <button
                           className="edit-btn"
                           type="button"
@@ -588,57 +573,46 @@ function GestionMensajes() {
                           Marcar leído
                         </button>
 
-                        <button
-                          className="delete-btn"
-                          type="button"
-                          onClick={() => solicitarEliminarMensaje(mensaje)}
-                        >
-                          Eliminar
-                        </button>
-
+                        {puedeEliminarMensajes && (
+                          <button
+                            className="delete-btn"
+                            type="button"
+                            onClick={() => solicitarEliminarMensaje(mensaje)}
+                          >
+                            Eliminar
+                          </button>
+                        )}
                       </div>
                     </td>
-
                   </tr>
                 ))}
 
                 {mensajesFiltrados.length === 0 && (
                   <tr>
-                    <td colSpan="8" className="empty-table">
+                    <td colSpan={columnasTabla} className="empty-table">
                       No hay mensajes disponibles
                     </td>
                   </tr>
                 )}
               </tbody>
-
             </table>
-
           </div>
         )}
-
       </section>
 
-      {mensajeAEliminar && (
+      {mensajeAEliminar && puedeEliminarMensajes && (
         <div className="modal-overlay">
-
           <section className="confirm-modal">
-
-            <div className="confirm-icon">
-              ⚠️
-            </div>
+            <div className="confirm-icon">⚠️</div>
 
             <h2>Eliminar mensaje</h2>
 
             <p>
               ¿Seguro que deseas eliminar{" "}
-              <strong>
-                {mensajeAEliminar.asunto}
-              </strong>
-              ?
+              <strong>{mensajeAEliminar.asunto}</strong>?
             </p>
 
             <div className="confirm-actions">
-
               <button
                 className="cancel-delete-btn"
                 type="button"
@@ -654,14 +628,10 @@ function GestionMensajes() {
               >
                 Sí, eliminar
               </button>
-
             </div>
-
           </section>
-
         </div>
       )}
-
     </main>
   )
 }

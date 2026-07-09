@@ -1,87 +1,125 @@
-import { permisos } from "../auth/roles"
+import { Link } from "react-router-dom"
+import {
+  Home,
+  LogOut,
+  Search,
+  UserPlus,
+} from "lucide-react"
+
+import {
+  getModulesForRole,
+  getRoleLabel,
+  canCreateUsers,
+} from "../auth/roles"
 
 function Dashboard({ user, onLogout }) {
-  const modulos = permisos[user.role] || []
+  const modulosDisponibles = getModulesForRole(user?.role)
+  const rolVisible = getRoleLabel(user?.role)
+  const nombreUsuario = user?.nombre || user?.email || "Usuario"
 
   return (
     <main className="dashboard">
-
       <aside className="sidebar">
+        <div className="logo-box">
+          <Home size={34} />
 
-        <h2>🎓 EduGestion</h2>
+          <div>
+            <h2>EduGestion</h2>
+            <span>Sistema Escolar</span>
+          </div>
+        </div>
 
         <div className="user-box">
-          <strong>
-            {user.nombre || user.email}
-          </strong>
+          <div className="avatar-circle">
+            {nombreUsuario.charAt(0).toUpperCase()}
+          </div>
 
-          <span>{user.role}</span>
+          <div className="user-info">
+            <h3>{nombreUsuario}</h3>
+            <p>{rolVisible}</p>
+          </div>
         </div>
 
         <nav>
-          {modulos.map((modulo) => (
-            <a href="#" key={modulo}>
-              {modulo}
-            </a>
-          ))}
+          {modulosDisponibles.map((modulo) => {
+            const Icono = modulo.icono
+
+            return (
+              <Link key={modulo.id} to={modulo.ruta}>
+                <Icono size={20} />
+                {modulo.nombre}
+              </Link>
+            )
+          })}
         </nav>
 
-        <button
-          className="logout"
-          onClick={onLogout}
-        >
-          Cerrar Sesión
+        <button className="logout" type="button" onClick={onLogout}>
+          <LogOut size={18} />
+          Cerrar sesión
         </button>
-
       </aside>
 
       <section className="content">
-
-        <header className="topbar">
-
+        <header className="dashboard-header">
           <div>
-            <h1>Panel Principal</h1>
+            <h1>Panel {rolVisible}</h1>
 
             <p>
-              Bienvenido,
-              {" "}
-              {user.nombre || user.email}
+              Bienvenido <strong>{nombreUsuario}</strong>. Solo verás los módulos
+              permitidos para tu rol.
             </p>
           </div>
 
-          {user.role === "Administrador" && (
-            <button className="admin-button">
-              ➕ Crear Usuario
-            </button>
-          )}
+          <div className="header-actions">
+            <div className="search-box">
+              <Search size={18} />
+              <input placeholder="Buscar módulo..." />
+            </div>
 
+            {canCreateUsers(user?.role) && (
+              <Link className="admin-button" to="/admin/usuarios">
+                <UserPlus size={18} />
+                Nuevo Usuario
+              </Link>
+            )}
+          </div>
         </header>
 
-        <section className="cards-grid">
+        <section className="stats-grid">
+          {modulosDisponibles.slice(0, 4).map((modulo) => {
+            const Icono = modulo.icono
 
-          {modulos.map((modulo) => (
-            <article
-              className="module-card"
-              key={modulo}
-            >
-              <h3>{modulo}</h3>
-
-              <p>
-                Módulo disponible para el rol{" "}
-                <strong>{user.role}</strong>
-              </p>
-
-              <button>
-                Ingresar
-              </button>
-
-            </article>
-          ))}
-
+            return (
+              <div className="stat-card" key={modulo.id}>
+                <Icono size={28} />
+                <h3>{modulo.resumen}</h3>
+                <span>Disponible</span>
+              </div>
+            )
+          })}
         </section>
 
-      </section>
+        <section className="cards-grid">
+          {modulosDisponibles.map((modulo) => {
+            const Icono = modulo.icono
 
+            return (
+              <article className="module-card" key={modulo.id}>
+                <div className="module-icon">
+                  <Icono size={28} />
+                </div>
+
+                <h3>{modulo.nombre}</h3>
+                <p>{modulo.descripcion}</p>
+
+                <Link className="module-button" to={modulo.ruta}>
+                  Abrir módulo
+                </Link>
+              </article>
+            )
+          })}
+        </section>
+      </section>
     </main>
   )
 }

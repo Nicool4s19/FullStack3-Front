@@ -3,11 +3,10 @@ import "./App.css"
 
 import AppRouter from "./routes/AppRouter"
 import Login from "./pages/Login"
-import Dashboard from "./pages/Dashboard"
 
 import {
   getCurrentUser,
-  logout
+  logout,
 } from "./services/authService"
 
 function App() {
@@ -44,17 +43,8 @@ function App() {
   }
 
   if (user) {
-    if (user.role === "ADMIN") {
-      return (
-        <AppRouter
-          user={user}
-          onLogout={handleLogout}
-        />
-      )
-    }
-
     return (
-      <Dashboard
+      <AppRouter
         user={user}
         onLogout={handleLogout}
       />

@@ -25,9 +25,6 @@ button{cursor:pointer;border:none}
 .module-button{display:inline-block;margin-top:16px;background:#2563eb;color:#fff;padding:10px 16px;border-radius:10px}
 @media(max-width:900px){.dashboard{grid-template-columns:1fr}.dashboard-header{flex-direction:column;align-items:flex-start}.stats-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:600px){.stats-grid,.cards-grid{grid-template-columns:1fr}}
-/*==========================
-GESTION USUARIOS
-==========================*/
 
 .page-tag{
 
@@ -108,9 +105,7 @@ GESTION USUARIOS
     background:#1e293b;
 
 }
-/*==============================
-FORMULARIO USUARIOS
-===============================*/
+
 
 .admin-form-card{
 
@@ -226,9 +221,6 @@ FORMULARIO USUARIOS
     transform:translateY(-2px);
 
 }
-/*==============================
-TABLA USUARIOS
-===============================*/
 
 .admin-table-card{
     background:#ffffff;
@@ -469,9 +461,6 @@ TABLA USUARIOS
         flex-direction:column;
     }
 }
-/* ==============================
-   AJUSTE FINAL GESTION USUARIOS
-============================== */
 
 .admin-page {
   min-height: 100vh;
@@ -479,7 +468,6 @@ TABLA USUARIOS
   background: #eef3f9;
 }
 
-/* HEADER */
 .admin-header {
   background: linear-gradient(135deg, #ffffff, #e0f2fe);
   border: 1px solid #dbeafe;
@@ -555,7 +543,6 @@ TABLA USUARIOS
   transform: translateY(-2px);
 }
 
-/* FORMULARIO */
 .admin-form-card {
   background: #ffffff;
   border-radius: 24px;
@@ -598,7 +585,6 @@ TABLA USUARIOS
   box-shadow: 0 0 0 4px rgba(37, 99, 235, .12);
 }
 
-/* BOTONES DEL FORMULARIO */
 .user-form button[type="submit"] {
   height: 50px;
   border-radius: 14px;
@@ -632,7 +618,6 @@ TABLA USUARIOS
   transform: translateY(-2px);
 }
 
-/* TABLA */
 .admin-table-card {
   background: #ffffff;
   border-radius: 24px;
@@ -727,7 +712,6 @@ TABLA USUARIOS
   border-radius: 0 16px 16px 0;
 }
 
-/* RESPONSIVE */
 @media (max-width: 900px) {
   .admin-page {
     padding: 20px;
@@ -761,9 +745,7 @@ TABLA USUARIOS
     width: 100%;
   }
 }
-/* ==============================
-   RESUMEN USUARIOS
-============================== */
+
 
 .users-summary-grid {
   display: grid;
@@ -810,9 +792,7 @@ TABLA USUARIOS
   font-weight: 600;
 }
 
-/* ==============================
-   FORMULARIO MODERNO
-============================== */
+
 
 .form-title-box {
   margin-bottom: 28px;
@@ -923,9 +903,7 @@ TABLA USUARIOS
     grid-template-columns: 1fr;
   }
 }
-/* ==============================
-   MODAL USUARIOS
-============================== */
+
 
 .modal-overlay {
   position: fixed;
@@ -979,9 +957,7 @@ TABLA USUARIOS
     transform: translateY(0) scale(1);
   }
 }
-/* ==============================
-   ALERTAS USUARIOS
-============================== */
+
 
 .alert {
   margin-bottom: 24px;
@@ -1032,9 +1008,7 @@ TABLA USUARIOS
     transform: translateY(0);
   }
 }
-/* ==============================
-   FILTROS TABLA USUARIOS
-============================== */
+
 
 .table-tools {
   display: flex;
@@ -1080,9 +1054,6 @@ TABLA USUARIOS
     width: 100%;
   }
 }
-/* ==============================
-   MODAL CONFIRMAR ELIMINAR
-============================== */
 
 .confirm-modal {
   width: min(100%, 430px);
@@ -1162,10 +1133,6 @@ TABLA USUARIOS
     flex-direction: column;
   }
 }
-/* ==============================
-   AJUSTES GESTION CURSOS
-============================== */
-
 .small-modal-card {
   width: min(100%, 760px);
 }
@@ -1213,9 +1180,6 @@ TABLA USUARIOS
 .admin-header .header-buttons {
   flex-wrap: wrap;
 }
-/* ==============================
-   TABLAS CURSOS Y NIVELES
-============================== */
 
 .course-title-cell {
   display: flex;
@@ -1260,10 +1224,6 @@ TABLA USUARIOS
 .small-modal-card {
   width: min(100%, 760px);
 }
-/* ==============================
-   GESTION ASIGNATURAS
-============================== */
-
 .subject-avatar {
   width: 44px;
   height: 44px;
@@ -1291,9 +1251,6 @@ TABLA USUARIOS
 .small-modal-card {
   width: min(100%, 760px);
 }
-/* ==============================
-   GESTION MENSAJERIA
-============================== */
 
 .form-field textarea {
   min-height: 130px;
@@ -1385,9 +1342,6 @@ TABLA USUARIOS
   font-weight: 700;
   white-space: nowrap;
 }
-/* ==============================
-   GESTION ANOTACIONES
-============================== */
 
 .annotation-avatar {
   width: 44px;
@@ -1425,9 +1379,6 @@ TABLA USUARIOS
   color: #475569;
   white-space: nowrap;
 }
-/* ==============================
-   GESTION CALENDARIO
-============================== */
 
 .calendar-grid {
   display: grid;
@@ -1576,9 +1527,6 @@ TABLA USUARIOS
     align-items: flex-start;
   }
 }
-/* ==============================
-   GESTION REUNIONES
-============================== */
 
 .meeting-title-cell {
   display: flex;
@@ -1636,9 +1584,6 @@ TABLA USUARIOS
   font-size: 13px;
   font-weight: 800;
 }
-/* ==============================
-   GESTION PORTAL INFORMATIVO
-============================== */
 
 .portal-grid {
   display: grid;
@@ -1751,9 +1696,6 @@ TABLA USUARIOS
     flex-direction: column;
   }
 }
-/* ==============================
-   AJUSTE GENERAL FINAL
-============================== */
 
 .admin-page {
   width: 100%;
@@ -2203,7 +2145,6 @@ TABLA USUARIOS
   }
 }
 
-/* Scroll bonito */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -2222,7 +2163,6 @@ TABLA USUARIOS
   background: #64748b;
 }
 
-/* Responsive */
 @media (max-width: 900px) {
   .admin-page {
     padding: 18px;
@@ -2265,9 +2205,6 @@ TABLA USUARIOS
     width: 100%;
   }
 }
-/* ==============================
-   HEADER CLARO FINAL
-============================== */
 
 .admin-header {
   background: linear-gradient(135deg, #ffffff, #eff6ff) !important;
@@ -2310,9 +2247,7 @@ TABLA USUARIOS
 .admin-header .back-button:hover {
   background: #eff6ff !important;
 }
-/* ==============================
-   HEADER AZUL CLARO FINAL
-============================== */
+
 
 .admin-header {
   background: linear-gradient(135deg, #1d4ed8, #3b82f6, #60a5fa) !important;
@@ -2356,4 +2291,271 @@ TABLA USUARIOS
 
 .admin-header .back-button:hover {
   background: rgba(255, 255, 255, .25) !important;
+}
+
+.logo-box h2 {
+  color: white;
+  font-size: 26px;
+  line-height: 1;
+  margin: 0;
+}
+
+.logo-box span {
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.user-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar-circle {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2563eb, #60a5fa);
+  display: grid;
+  place-items: center;
+  color: white;
+  font-weight: 900;
+  font-size: 19px;
+  flex-shrink: 0;
+}
+
+.user-info h3 {
+  color: white;
+  font-size: 15px;
+  margin: 0 0 4px;
+  line-height: 1.2;
+}
+
+.user-info p {
+  color: #94a3b8;
+  font-size: 13px;
+  margin: 0;
+  font-weight: 600;
+}
+
+.stat-card h3 {
+  color: #334155;
+  font-size: 17px;
+  margin: 12px 0 6px;
+}
+
+.stat-card span {
+  color: #2563eb;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.module-card h3 {
+  color: #0f172a;
+  font-size: 21px;
+  margin-bottom: 8px;
+}
+
+.module-card p {
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.readonly-message {
+  margin-top: 10px !important;
+  color: #1e40af !important;
+  font-weight: 800;
+  background: rgba(255, 255, 255, .18);
+  border: 1px solid rgba(255, 255, 255, .30);
+  padding: 10px 14px;
+  border-radius: 12px;
+  width: fit-content;
+}
+
+.access-denied-card {
+  max-width: 760px;
+  margin: 70px auto;
+  text-align: center;
+  padding: 45px;
+}
+
+.access-denied-card h1 {
+  color: #0f172a;
+  margin: 14px 0;
+  font-size: 34px;
+}
+
+.access-denied-card p {
+  color: #64748b;
+  font-size: 17px;
+  line-height: 1.6;
+  margin-bottom: 25px;
+}
+
+.access-back-button {
+  display: inline-flex;
+  width: fit-content;
+}
+.auth-container {
+  min-height: 100vh;
+  width: 100%;
+  background:
+    linear-gradient(
+      rgba(7, 89, 133, 0.78),
+      rgba(7, 89, 133, 0.78)
+    ),
+    url("/aula-login.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 30px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 460px;
+  background: white;
+  border-radius: 28px;
+  padding: 42px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.auth-card .badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 14px;
+  margin-bottom: 22px;
+}
+
+.auth-card h1 {
+  font-size: 38px;
+  color: #0f172a;
+  margin-bottom: 12px;
+  line-height: 1.1;
+}
+
+.auth-card p {
+  color: #64748b;
+  font-size: 16px;
+  line-height: 1.5;
+  margin-bottom: 26px;
+}
+
+.auth-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.auth-card input {
+  width: 100%;
+  height: 52px;
+  border: 1px solid #cbd5e1;
+  border-radius: 14px;
+  padding: 0 16px;
+  font-size: 15px;
+  outline: none;
+  background: #f8fafc;
+  color: #0f172a;
+  transition: .25s;
+}
+
+.auth-card input:focus {
+  border-color: #2563eb;
+  background: white;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, .12);
+}
+
+.auth-card button {
+  height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+  font-size: 16px;
+  font-weight: 900;
+  border: none;
+  cursor: pointer;
+  transition: .25s;
+}
+
+.auth-card button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(37, 99, 235, .28);
+}
+
+.auth-card button:disabled {
+  opacity: .7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.form-error {
+  background: #fee2e2;
+  color: #991b1b !important;
+  border: 1px solid #fecaca;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-weight: 700;
+  margin: 0 !important;
+}
+
+.loading-screen {
+  min-height: 100vh;
+  background: #eef3f9;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #0f172a;
+}
+
+.ficha-info-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 22px;
+  padding: 22px;
+  color: #334155;
+}
+
+@media (max-width: 900px) {
+  .sidebar {
+    min-height: auto;
+  }
+
+  .header-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-box {
+    width: 100%;
+  }
+
+  .admin-button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 520px) {
+  .auth-card {
+    padding: 30px 22px;
+    border-radius: 22px;
+  }
+
+  .auth-card h1 {
+    font-size: 32px;
+  }
 }

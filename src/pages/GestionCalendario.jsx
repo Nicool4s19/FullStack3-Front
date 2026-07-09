@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react"
 import { Link } from "react-router-dom"
 
+import { canManageCalendar } from "../auth/roles"
+
 const eventosIniciales = [
   {
     id: 1,
@@ -36,7 +38,9 @@ const eventoInicial = {
   descripcion: "",
 }
 
-function GestionCalendario() {
+function GestionCalendario({ user }) {
+  const puedeGestionarCalendario = canManageCalendar(user?.role)
+
   const [eventos, setEventos] = useState(eventosIniciales)
   const [form, setForm] = useState(eventoInicial)
   const [busqueda, setBusqueda] = useState("")
@@ -83,6 +87,8 @@ function GestionCalendario() {
   }
 
   function abrirFormulario() {
+    if (!puedeGestionarCalendario) return
+
     setForm(eventoInicial)
     setMostrarFormulario(true)
   }
@@ -94,6 +100,11 @@ function GestionCalendario() {
 
   function guardarEvento(e) {
     e.preventDefault()
+
+    if (!puedeGestionarCalendario) {
+      setMensaje("No tienes permiso para crear eventos")
+      return
+    }
 
     const nuevoEvento = {
       id: Date.now(),
@@ -110,6 +121,8 @@ function GestionCalendario() {
   }
 
   function solicitarEliminarEvento(evento) {
+    if (!puedeGestionarCalendario) return
+
     setEventoAEliminar(evento)
   }
 
@@ -118,6 +131,8 @@ function GestionCalendario() {
   }
 
   function confirmarEliminarEvento() {
+    if (!eventoAEliminar || !puedeGestionarCalendario) return
+
     setEventos(eventos.filter((evento) => evento.id !== eventoAEliminar.id))
     setMensaje("Evento eliminado correctamente")
     setEventoAEliminar(null)
@@ -143,48 +158,57 @@ function GestionCalendario() {
 
   return (
     <main className="admin-page">
-
       <header className="admin-header">
-
         <div>
-          <span className="page-tag">
-            PANEL ADMINISTRATIVO
-          </span>
+          <span className="page-tag">CALENDARIO</span>
 
           <h1>📅 Calendario Institucional</h1>
 
           <p>
-            Gestiona eventos, actividades, evaluaciones y fechas importantes.
+            Revisa eventos, actividades, evaluaciones y fechas importantes.
           </p>
+
+          {!puedeGestionarCalendario && (
+            <p className="readonly-message">
+              Vista de solo lectura para tu rol.
+            </p>
+          )}
         </div>
 
         <div className="header-buttons">
-
-          <button
-            className="new-user-btn"
-            type="button"
-            onClick={abrirFormulario}
-          >
-            ➕ Nuevo Evento
-          </button>
+          {puedeGestionarCalendario && (
+            <button
+              className="new-user-btn"
+              type="button"
+              onClick={abrirFormulario}
+            >
+              ➕ Nuevo Evento
+            </button>
+          )}
 
           <Link className="back-button" to="/">
             ⬅ Dashboard
           </Link>
-
         </div>
-
       </header>
 
       {mensaje && (
-        <div className="alert alert-success">
-          <span>✅</span>
+        <div
+          className={
+            mensaje.toLowerCase().includes("no tienes")
+              ? "alert alert-error"
+              : "alert alert-success"
+          }
+        >
+          <span>
+            {mensaje.toLowerCase().includes("no tienes") ? "⚠️" : "✅"}
+          </span>
+
           <p>{mensaje}</p>
         </div>
       )}
 
       <section className="users-summary-grid">
-
         <article className="users-summary-card">
           <span>📅</span>
           <div>
@@ -216,14 +240,11 @@ function GestionCalendario() {
             <p>Evaluaciones</p>
           </div>
         </article>
-
       </section>
 
-      {mostrarFormulario && (
+      {mostrarFormulario && puedeGestionarCalendario && (
         <div className="modal-overlay">
-
           <section className="admin-form-card modal-card small-modal-card">
-
             <button
               className="modal-close"
               type="button"
@@ -233,23 +254,19 @@ function GestionCalendario() {
             </button>
 
             <div className="form-title-box">
-
-              <span className="page-tag">
-                NUEVO EVENTO
-              </span>
+              <span className="page-tag">NUEVO EVENTO</span>
 
               <h2>Crear evento</h2>
 
               <p>
                 Registra una fecha importante para el calendario institucional.
               </p>
-
             </div>
 
             <form className="user-form" onSubmit={guardarEvento}>
-
               <label className="form-field">
                 <span>Título del evento</span>
+
                 <input
                   name="titulo"
                   placeholder="Ej: Reunión de apoderados"
@@ -261,6 +278,7 @@ function GestionCalendario() {
 
               <label className="form-field">
                 <span>Tipo de evento</span>
+
                 <select
                   name="tipo"
                   value={form.tipo}
@@ -277,6 +295,7 @@ function GestionCalendario() {
 
               <label className="form-field">
                 <span>Fecha</span>
+
                 <input
                   name="fecha"
                   type="date"
@@ -288,6 +307,7 @@ function GestionCalendario() {
 
               <label className="form-field">
                 <span>Hora</span>
+
                 <input
                   name="hora"
                   type="time"
@@ -299,6 +319,7 @@ function GestionCalendario() {
 
               <label className="form-field full-width">
                 <span>Descripción</span>
+
                 <textarea
                   name="descripcion"
                   placeholder="Descripción del evento..."
@@ -309,11 +330,7 @@ function GestionCalendario() {
               </label>
 
               <div className="form-actions full-width">
-
-                <button
-                  className="save-user-btn"
-                  type="submit"
-                >
+                <button className="save-user-btn" type="submit">
                   Crear evento
                 </button>
 
@@ -324,20 +341,14 @@ function GestionCalendario() {
                 >
                   Cancelar
                 </button>
-
               </div>
-
             </form>
-
           </section>
-
         </div>
       )}
 
       <section className="admin-table-card">
-
         <div className="table-header">
-
           <div>
             <span className="page-tag">CALENDARIO</span>
 
@@ -349,9 +360,7 @@ function GestionCalendario() {
           </div>
 
           <div className="table-tools">
-
             <div className="search-container">
-
               <input
                 className="search-input"
                 type="text"
@@ -359,33 +368,30 @@ function GestionCalendario() {
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
               />
-
             </div>
-
           </div>
-
         </div>
 
         <div className="calendar-grid">
-
           {eventosFiltrados.map((evento) => (
             <article className="calendar-event-card" key={evento.id}>
-
               <div className="calendar-date-box">
                 <span>{evento.fecha?.slice(8, 10) || "--"}</span>
+
                 <p>
                   {evento.fecha
-                    ? new Date(`${evento.fecha}T00:00:00`).toLocaleDateString("es-CL", {
-                        month: "short",
-                      })
+                    ? new Date(`${evento.fecha}T00:00:00`).toLocaleDateString(
+                        "es-CL",
+                        {
+                          month: "short",
+                        }
+                      )
                     : "N/A"}
                 </p>
               </div>
 
               <div className="calendar-event-content">
-
                 <div className="calendar-event-top">
-
                   <span
                     className={`calendar-type-badge calendar-type-${obtenerClaseTipo(
                       evento.tipo
@@ -394,10 +400,7 @@ function GestionCalendario() {
                     {evento.tipo}
                   </span>
 
-                  <span className="calendar-hour">
-                    🕒 {evento.hora}
-                  </span>
-
+                  <span className="calendar-hour">🕒 {evento.hora}</span>
                 </div>
 
                 <h3>{evento.titulo}</h3>
@@ -405,23 +408,19 @@ function GestionCalendario() {
                 <p>{evento.descripcion}</p>
 
                 <div className="calendar-event-footer">
+                  <span>📆 {formatearFecha(evento.fecha)}</span>
 
-                  <span>
-                    📆 {formatearFecha(evento.fecha)}
-                  </span>
-
-                  <button
-                    className="delete-btn"
-                    type="button"
-                    onClick={() => solicitarEliminarEvento(evento)}
-                  >
-                    Eliminar
-                  </button>
-
+                  {puedeGestionarCalendario && (
+                    <button
+                      className="delete-btn"
+                      type="button"
+                      onClick={() => solicitarEliminarEvento(evento)}
+                    >
+                      Eliminar
+                    </button>
+                  )}
                 </div>
-
               </div>
-
             </article>
           ))}
 
@@ -430,32 +429,22 @@ function GestionCalendario() {
               No hay eventos disponibles
             </div>
           )}
-
         </div>
-
       </section>
 
-      {eventoAEliminar && (
+      {eventoAEliminar && puedeGestionarCalendario && (
         <div className="modal-overlay">
-
           <section className="confirm-modal">
-
-            <div className="confirm-icon">
-              ⚠️
-            </div>
+            <div className="confirm-icon">⚠️</div>
 
             <h2>Eliminar evento</h2>
 
             <p>
               ¿Seguro que deseas eliminar{" "}
-              <strong>
-                {eventoAEliminar.titulo}
-              </strong>
-              ?
+              <strong>{eventoAEliminar.titulo}</strong>?
             </p>
 
             <div className="confirm-actions">
-
               <button
                 className="cancel-delete-btn"
                 type="button"
@@ -471,14 +460,10 @@ function GestionCalendario() {
               >
                 Sí, eliminar
               </button>
-
             </div>
-
           </section>
-
         </div>
       )}
-
     </main>
   )
 }
