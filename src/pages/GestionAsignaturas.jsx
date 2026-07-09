@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useState } from "react"
 import { Link } from "react-router-dom"
+
 import {
   listarAsignaturas,
   crearAsignatura,
   eliminarAsignatura,
 } from "../services/asignaturaService"
+
+import { canManageAcademicData } from "../auth/roles"
 
 const asignaturaInicial = {
   nombre: "",
@@ -12,7 +15,9 @@ const asignaturaInicial = {
   descripcion: "",
 }
 
-function GestionAsignaturas() {
+function GestionAsignaturas({ user }) {
+  const puedeGestionar = canManageAcademicData(user?.role)
+
   const [asignaturas, setAsignaturas] = useState([])
   const [form, setForm] = useState(asignaturaInicial)
   const [busqueda, setBusqueda] = useState("")
@@ -66,6 +71,11 @@ function GestionAsignaturas() {
   }
 
   function abrirFormulario() {
+    if (!puedeGestionar) {
+      setMensaje("Tu rol no puede crear asignaturas")
+      return
+    }
+
     limpiarFormulario()
     setMostrarFormulario(true)
   }
@@ -77,6 +87,11 @@ function GestionAsignaturas() {
 
   async function guardarAsignatura(e) {
     e.preventDefault()
+
+    if (!puedeGestionar) {
+      setMensaje("Tu rol no puede modificar asignaturas")
+      return
+    }
 
     const payload = {
       nombre: form.nombre.trim(),
@@ -102,6 +117,11 @@ function GestionAsignaturas() {
   }
 
   function solicitarEliminarAsignatura(asignatura) {
+    if (!puedeGestionar) {
+      setMensaje("Tu rol no puede eliminar asignaturas")
+      return
+    }
+
     setAsignaturaAEliminar(asignatura)
   }
 
@@ -110,7 +130,7 @@ function GestionAsignaturas() {
   }
 
   async function confirmarEliminarAsignatura() {
-    if (!asignaturaAEliminar) return
+    if (!asignaturaAEliminar || !puedeGestionar) return
 
     try {
       setMensaje("")
@@ -140,49 +160,56 @@ function GestionAsignaturas() {
 
   return (
     <main className="admin-page">
-
       <header className="admin-header">
-
         <div>
           <span className="page-tag">
-            PANEL ADMINISTRATIVO
+            ASIGNATURAS
           </span>
 
           <h1>📖 Gestión de Asignaturas</h1>
 
           <p>
-            Administra las asignaturas, códigos y descripciones del sistema.
+            Consulta las asignaturas, códigos y descripciones del sistema.
           </p>
+
+          {!puedeGestionar && (
+            <p className="readonly-message">
+              Vista de solo lectura para tu rol.
+            </p>
+          )}
         </div>
 
         <div className="header-buttons">
-
-          <button
-            className="new-user-btn"
-            type="button"
-            onClick={abrirFormulario}
-          >
-            ➕ Nueva Asignatura
-          </button>
+          {puedeGestionar && (
+            <button
+              className="new-user-btn"
+              type="button"
+              onClick={abrirFormulario}
+            >
+              ➕ Nueva Asignatura
+            </button>
+          )}
 
           <Link className="back-button" to="/">
             ⬅ Dashboard
           </Link>
-
         </div>
-
       </header>
 
       {mensaje && (
         <div
           className={
-            mensaje.toLowerCase().includes("error")
+            mensaje.toLowerCase().includes("error") ||
+            mensaje.toLowerCase().includes("no puede")
               ? "alert alert-error"
               : "alert alert-success"
           }
         >
           <span>
-            {mensaje.toLowerCase().includes("error") ? "⚠️" : "✅"}
+            {mensaje.toLowerCase().includes("error") ||
+            mensaje.toLowerCase().includes("no puede")
+              ? "⚠️"
+              : "✅"}
           </span>
 
           <p>{mensaje}</p>
@@ -190,7 +217,6 @@ function GestionAsignaturas() {
       )}
 
       <section className="users-summary-grid">
-
         <article className="users-summary-card">
           <span>📖</span>
           <div>
@@ -210,9 +236,7 @@ function GestionAsignaturas() {
         <article className="users-summary-card">
           <span>🏷️</span>
           <div>
-            <h3>
-              {asignaturas.filter((a) => a.codigo).length}
-            </h3>
+            <h3>{asignaturas.filter((a) => a.codigo).length}</h3>
             <p>Con código</p>
           </div>
         </article>
@@ -220,20 +244,15 @@ function GestionAsignaturas() {
         <article className="users-summary-card">
           <span>✅</span>
           <div>
-            <h3>
-              {asignaturas.filter((a) => a.descripcion).length}
-            </h3>
+            <h3>{asignaturas.filter((a) => a.descripcion).length}</h3>
             <p>Con descripción</p>
           </div>
         </article>
-
       </section>
 
-      {mostrarFormulario && (
+      {mostrarFormulario && puedeGestionar && (
         <div className="modal-overlay">
-
           <section className="admin-form-card modal-card small-modal-card">
-
             <button
               className="modal-close"
               type="button"
@@ -243,7 +262,6 @@ function GestionAsignaturas() {
             </button>
 
             <div className="form-title-box">
-
               <span className="page-tag">
                 NUEVA ASIGNATURA
               </span>
@@ -253,13 +271,12 @@ function GestionAsignaturas() {
               <p>
                 Completa los datos para registrar una asignatura en el sistema.
               </p>
-
             </div>
 
             <form className="user-form" onSubmit={guardarAsignatura}>
-
               <label className="form-field">
                 <span>Nombre de la asignatura</span>
+
                 <input
                   name="nombre"
                   placeholder="Ej: Matemáticas"
@@ -271,6 +288,7 @@ function GestionAsignaturas() {
 
               <label className="form-field">
                 <span>Código</span>
+
                 <input
                   name="codigo"
                   placeholder="Ej: MAT-101"
@@ -282,6 +300,7 @@ function GestionAsignaturas() {
 
               <label className="form-field full-width">
                 <span>Descripción</span>
+
                 <input
                   name="descripcion"
                   placeholder="Descripción de la asignatura"
@@ -292,7 +311,6 @@ function GestionAsignaturas() {
               </label>
 
               <div className="form-actions full-width">
-
                 <button
                   className="save-user-btn"
                   type="submit"
@@ -308,20 +326,14 @@ function GestionAsignaturas() {
                 >
                   Cancelar
                 </button>
-
               </div>
-
             </form>
-
           </section>
-
         </div>
       )}
 
       <section className="admin-table-card">
-
         <div className="table-header">
-
           <div>
             <span className="page-tag">ASIGNATURAS</span>
 
@@ -333,9 +345,7 @@ function GestionAsignaturas() {
           </div>
 
           <div className="table-tools">
-
             <div className="search-container">
-
               <input
                 className="search-input"
                 type="text"
@@ -343,11 +353,8 @@ function GestionAsignaturas() {
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
               />
-
             </div>
-
           </div>
-
         </div>
 
         {cargando ? (
@@ -356,23 +363,21 @@ function GestionAsignaturas() {
           </div>
         ) : (
           <div className="table-responsive">
-
             <table className="admin-table">
-
               <thead>
                 <tr>
                   <th>ID</th>
                   <th>Asignatura</th>
                   <th>Código</th>
                   <th>Descripción</th>
-                  <th>Acciones</th>
+
+                  {puedeGestionar && <th>Acciones</th>}
                 </tr>
               </thead>
 
               <tbody>
                 {asignaturasFiltradas.map((asignatura) => (
                   <tr key={asignatura.idAsignatura}>
-
                     <td>
                       <span className="id-badge">
                         #{asignatura.idAsignatura}
@@ -381,7 +386,6 @@ function GestionAsignaturas() {
 
                     <td>
                       <div className="course-title-cell">
-
                         <div className="subject-avatar">
                           📖
                         </div>
@@ -389,7 +393,6 @@ function GestionAsignaturas() {
                         <strong>
                           {asignatura.nombre}
                         </strong>
-
                       </div>
                     </td>
 
@@ -405,44 +408,43 @@ function GestionAsignaturas() {
                       </span>
                     </td>
 
-                    <td>
-                      <div className="action-buttons">
-
-                        <button
-                          className="delete-btn"
-                          type="button"
-                          onClick={() => solicitarEliminarAsignatura(asignatura)}
-                        >
-                          Eliminar
-                        </button>
-
-                      </div>
-                    </td>
-
+                    {puedeGestionar && (
+                      <td>
+                        <div className="action-buttons">
+                          <button
+                            className="delete-btn"
+                            type="button"
+                            onClick={() =>
+                              solicitarEliminarAsignatura(asignatura)
+                            }
+                          >
+                            Eliminar
+                          </button>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))}
 
                 {asignaturasFiltradas.length === 0 && (
                   <tr>
-                    <td colSpan="5" className="empty-table">
+                    <td
+                      colSpan={puedeGestionar ? "5" : "4"}
+                      className="empty-table"
+                    >
                       No hay asignaturas disponibles
                     </td>
                   </tr>
                 )}
               </tbody>
-
             </table>
-
           </div>
         )}
-
       </section>
 
-      {asignaturaAEliminar && (
+      {asignaturaAEliminar && puedeGestionar && (
         <div className="modal-overlay">
-
           <section className="confirm-modal">
-
             <div className="confirm-icon">
               ⚠️
             </div>
@@ -458,7 +460,6 @@ function GestionAsignaturas() {
             </p>
 
             <div className="confirm-actions">
-
               <button
                 className="cancel-delete-btn"
                 type="button"
@@ -474,14 +475,10 @@ function GestionAsignaturas() {
               >
                 Sí, eliminar
               </button>
-
             </div>
-
           </section>
-
         </div>
       )}
-
     </main>
   )
 }

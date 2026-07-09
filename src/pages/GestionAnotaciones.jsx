@@ -8,7 +8,10 @@ import {
   eliminarAnotacion,
 } from "../services/asignaturaService"
 
-import { canManageAnnotations } from "../auth/roles"
+import {
+  canCreateAnnotations,
+  canManageAnnotations,
+} from "../auth/roles"
 
 const anotacionInicial = {
   estudiante: "",
@@ -17,6 +20,7 @@ const anotacionInicial = {
 }
 
 function GestionAnotaciones({ user }) {
+  const puedeCrearAnotaciones = canCreateAnnotations(user?.role)
   const puedeGestionarAnotaciones = canManageAnnotations(user?.role)
 
   const [anotaciones, setAnotaciones] = useState([])
@@ -91,7 +95,7 @@ function GestionAnotaciones({ user }) {
   }
 
   function abrirFormulario() {
-    if (!puedeGestionarAnotaciones) return
+    if (!puedeCrearAnotaciones) return
 
     limpiarFormulario()
     setMostrarFormulario(true)
@@ -105,7 +109,7 @@ function GestionAnotaciones({ user }) {
   async function guardarAnotacion(e) {
     e.preventDefault()
 
-    if (!puedeGestionarAnotaciones) {
+    if (!puedeCrearAnotaciones) {
       setMensaje("No tienes permiso para crear anotaciones")
       return
     }
@@ -139,7 +143,10 @@ function GestionAnotaciones({ user }) {
   }
 
   function solicitarEliminarAnotacion(anotacion) {
-    if (!puedeGestionarAnotaciones) return
+    if (!puedeGestionarAnotaciones) {
+      setMensaje("Tu rol no puede eliminar anotaciones")
+      return
+    }
 
     setAnotacionAEliminar(anotacion)
   }
@@ -200,15 +207,21 @@ function GestionAnotaciones({ user }) {
             Revisa observaciones, anotaciones y registros asociados a asignaturas.
           </p>
 
-          {!puedeGestionarAnotaciones && (
+          {!puedeCrearAnotaciones && !puedeGestionarAnotaciones && (
             <p className="readonly-message">
               Vista de solo lectura para tu rol.
+            </p>
+          )}
+
+          {puedeCrearAnotaciones && !puedeGestionarAnotaciones && (
+            <p className="readonly-message">
+              Puedes crear anotaciones, pero no eliminarlas.
             </p>
           )}
         </div>
 
         <div className="header-buttons">
-          {puedeGestionarAnotaciones && (
+          {puedeCrearAnotaciones && (
             <button
               className="new-user-btn"
               type="button"
@@ -229,7 +242,8 @@ function GestionAnotaciones({ user }) {
           className={
             mensaje.toLowerCase().includes("error") ||
             mensaje.toLowerCase().includes("debes") ||
-            mensaje.toLowerCase().includes("no tienes")
+            mensaje.toLowerCase().includes("no tienes") ||
+            mensaje.toLowerCase().includes("no puede")
               ? "alert alert-error"
               : "alert alert-success"
           }
@@ -237,7 +251,8 @@ function GestionAnotaciones({ user }) {
           <span>
             {mensaje.toLowerCase().includes("error") ||
             mensaje.toLowerCase().includes("debes") ||
-            mensaje.toLowerCase().includes("no tienes")
+            mensaje.toLowerCase().includes("no tienes") ||
+            mensaje.toLowerCase().includes("no puede")
               ? "⚠️"
               : "✅"}
           </span>
@@ -280,7 +295,7 @@ function GestionAnotaciones({ user }) {
         </article>
       </section>
 
-      {mostrarFormulario && puedeGestionarAnotaciones && (
+      {mostrarFormulario && puedeCrearAnotaciones && (
         <div className="modal-overlay">
           <section className="admin-form-card modal-card small-modal-card">
             <button

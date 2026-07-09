@@ -9,7 +9,11 @@ import {
 } from "../services/mensajeService"
 
 import { listarUsuarios } from "../services/usuarioService"
-import { canDeleteMessages } from "../auth/roles"
+
+import {
+  canManageMessages,
+  canDeleteMessages,
+} from "../auth/roles"
 
 const mensajeInicial = {
   idRemitente: "",
@@ -19,6 +23,7 @@ const mensajeInicial = {
 }
 
 function GestionMensajes({ user }) {
+  const puedeGestionarMensajes = canManageMessages(user?.role)
   const puedeEliminarMensajes = canDeleteMessages(user?.role)
 
   const [mensajes, setMensajes] = useState([])
@@ -96,6 +101,11 @@ function GestionMensajes({ user }) {
   }
 
   function abrirFormulario() {
+    if (!puedeGestionarMensajes) {
+      setMensajeSistema("Tu rol no puede crear mensajes")
+      return
+    }
+
     limpiarFormulario()
     setMostrarFormulario(true)
   }
@@ -107,6 +117,11 @@ function GestionMensajes({ user }) {
 
   async function guardarMensaje(e) {
     e.preventDefault()
+
+    if (!puedeGestionarMensajes) {
+      setMensajeSistema("Tu rol no puede crear mensajes")
+      return
+    }
 
     const payload = {
       idRemitente: Number(form.idRemitente),
@@ -132,28 +147,20 @@ function GestionMensajes({ user }) {
     }
   }
 
-  async function marcarLeido(mensaje) {
-    const id = obtenerIdMensaje(mensaje)
-
-    if (!id) {
-      setMensajeSistema("No se encontró el ID del mensaje")
-      return
-    }
-
+  async function marcarLeido(idMensaje) {
     try {
-      setMensajeSistema("")
-
-      await marcarMensajeComoLeido(id)
-
-      setMensajeSistema("Mensaje marcado como leído")
+      await marcarMensajeComoLeido(idMensaje)
       await cargarMensajes()
     } catch (error) {
-      setMensajeSistema(`Error al marcar como leído: ${obtenerMensajeError(error)}`)
+      setMensajeSistema(`Error al marcar mensaje: ${obtenerMensajeError(error)}`)
     }
   }
 
   function solicitarEliminarMensaje(mensaje) {
-    if (!puedeEliminarMensajes) return
+    if (!puedeEliminarMensajes) {
+      setMensajeSistema("Tu rol no puede eliminar mensajes")
+      return
+    }
 
     setMensajeAEliminar(mensaje)
   }
@@ -165,17 +172,10 @@ function GestionMensajes({ user }) {
   async function confirmarEliminarMensaje() {
     if (!mensajeAEliminar || !puedeEliminarMensajes) return
 
-    const id = obtenerIdMensaje(mensajeAEliminar)
-
-    if (!id) {
-      setMensajeSistema("No se encontró el ID del mensaje")
-      return
-    }
-
     try {
       setMensajeSistema("")
 
-      await eliminarMensaje(id)
+      await eliminarMensaje(mensajeAEliminar.idMensaje)
 
       setMensajeSistema("Mensaje eliminado correctamente")
       setMensajeAEliminar(null)
@@ -185,69 +185,20 @@ function GestionMensajes({ user }) {
     }
   }
 
-  function obtenerIdMensaje(mensaje) {
-    return mensaje.idMensaje || mensaje.id || mensaje.id_mensaje
-  }
-
   function obtenerNombreUsuario(idUsuario) {
-    const usuario = usuarios.find(
-      (item) => Number(item.idUsuario) === Number(idUsuario)
-    )
+    const usuario = usuarios.find((item) => item.idUsuario === idUsuario)
 
-    if (!usuario) {
-      return `Usuario #${idUsuario || "N/A"}`
-    }
-
-    return `${usuario.nombre || ""} ${usuario.apellido || ""}`.trim() || usuario.email
-  }
-
-  function obtenerIdRemitente(mensaje) {
-    return (
-      mensaje.idRemitente ||
-      mensaje.remitente?.idUsuario ||
-      mensaje.remitenteId ||
-      mensaje.usuarioRemitente?.idUsuario
-    )
-  }
-
-  function obtenerIdDestinatario(mensaje) {
-    return (
-      mensaje.idDestinatario ||
-      mensaje.destinatario?.idUsuario ||
-      mensaje.destinatarioId ||
-      mensaje.usuarioDestinatario?.idUsuario
-    )
-  }
-
-  function obtenerFecha(mensaje) {
-    return (
-      mensaje.fechaEnvio ||
-      mensaje.fechaMensaje ||
-      mensaje.fechaCreacion ||
-      mensaje.createdAt ||
-      "Sin fecha"
-    )
-  }
-
-  function estaLeido(mensaje) {
-    if (mensaje.leido === true) return "Leído"
-    if (mensaje.leido === false) return "No leído"
-    if (mensaje.estado) return mensaje.estado
-    return "Sin estado"
+    return usuario?.nombre || usuario?.email || `Usuario ${idUsuario}`
   }
 
   const mensajesFiltrados = mensajes.filter((mensaje) => {
-    const remitente = obtenerNombreUsuario(obtenerIdRemitente(mensaje))
-    const destinatario = obtenerNombreUsuario(obtenerIdDestinatario(mensaje))
-
     const texto = [
-      obtenerIdMensaje(mensaje),
-      remitente,
-      destinatario,
+      mensaje.idMensaje,
       mensaje.asunto,
       mensaje.contenidoMensaje,
-      estaLeido(mensaje),
-      obtenerFecha(mensaje),
+      mensaje.fechaEnvio,
+      obtenerNombreUsuario(mensaje.idRemitente),
+      obtenerNombreUsuario(mensaje.idDestinatario),
     ]
       .join(" ")
       .toLowerCase()
@@ -255,15 +206,7 @@ function GestionMensajes({ user }) {
     return texto.includes(busqueda.toLowerCase())
   })
 
-  const mensajesLeidos = mensajes.filter(
-    (mensaje) => estaLeido(mensaje).toLowerCase() === "leído"
-  ).length
-
-  const mensajesNoLeidos = mensajes.filter(
-    (mensaje) => estaLeido(mensaje).toLowerCase() === "no leído"
-  ).length
-
-  const columnasTabla = puedeEliminarMensajes ? 8 : 8
+  const columnasTabla = puedeEliminarMensajes ? "7" : "6"
 
   return (
     <main className="admin-page">
@@ -271,27 +214,29 @@ function GestionMensajes({ user }) {
         <div>
           <span className="page-tag">MENSAJERÍA</span>
 
-          <h1>💬 Gestión de Mensajería</h1>
+          <h1>💬 Gestión de Mensajes</h1>
 
           <p>
-            Crea, revisa y marca mensajes como leídos.
+            Revisa los mensajes internos del sistema.
           </p>
 
-          {!puedeEliminarMensajes && (
+          {!puedeGestionarMensajes && (
             <p className="readonly-message">
-              Tu rol no puede eliminar mensajes.
+              Vista de solo lectura para tu rol.
             </p>
           )}
         </div>
 
         <div className="header-buttons">
-          <button
-            className="new-user-btn"
-            type="button"
-            onClick={abrirFormulario}
-          >
-            ➕ Nuevo Mensaje
-          </button>
+          {puedeGestionarMensajes && (
+            <button
+              className="new-user-btn"
+              type="button"
+              onClick={abrirFormulario}
+            >
+              ➕ Nuevo Mensaje
+            </button>
+          )}
 
           <Link className="back-button" to="/">
             ⬅ Dashboard
@@ -303,14 +248,14 @@ function GestionMensajes({ user }) {
         <div
           className={
             mensajeSistema.toLowerCase().includes("error") ||
-            mensajeSistema.toLowerCase().includes("no se encontró")
+            mensajeSistema.toLowerCase().includes("no puede")
               ? "alert alert-error"
               : "alert alert-success"
           }
         >
           <span>
             {mensajeSistema.toLowerCase().includes("error") ||
-            mensajeSistema.toLowerCase().includes("no se encontró")
+            mensajeSistema.toLowerCase().includes("no puede")
               ? "⚠️"
               : "✅"}
           </span>
@@ -329,18 +274,10 @@ function GestionMensajes({ user }) {
         </article>
 
         <article className="users-summary-card">
-          <span>📩</span>
+          <span>📨</span>
           <div>
-            <h3>{mensajesNoLeidos}</h3>
+            <h3>{mensajes.filter((m) => !m.leido).length}</h3>
             <p>No leídos</p>
-          </div>
-        </article>
-
-        <article className="users-summary-card">
-          <span>✅</span>
-          <div>
-            <h3>{mensajesLeidos}</h3>
-            <p>Leídos</p>
           </div>
         </article>
 
@@ -351,9 +288,17 @@ function GestionMensajes({ user }) {
             <p>Usuarios</p>
           </div>
         </article>
+
+        <article className="users-summary-card">
+          <span>🔎</span>
+          <div>
+            <h3>{mensajesFiltrados.length}</h3>
+            <p>Resultados</p>
+          </div>
+        </article>
       </section>
 
-      {mostrarFormulario && (
+      {mostrarFormulario && puedeGestionarMensajes && (
         <div className="modal-overlay">
           <section className="admin-form-card modal-card small-modal-card">
             <button
@@ -367,10 +312,10 @@ function GestionMensajes({ user }) {
             <div className="form-title-box">
               <span className="page-tag">NUEVO MENSAJE</span>
 
-              <h2>Crear nuevo mensaje</h2>
+              <h2>Crear mensaje</h2>
 
               <p>
-                Selecciona remitente, destinatario y escribe el contenido del mensaje.
+                Selecciona remitente, destinatario y escribe el contenido.
               </p>
             </div>
 
@@ -387,8 +332,11 @@ function GestionMensajes({ user }) {
                   <option value="">Selecciona remitente</option>
 
                   {usuarios.map((usuario) => (
-                    <option key={usuario.idUsuario} value={usuario.idUsuario}>
-                      {usuario.nombre} {usuario.apellido} - {usuario.email}
+                    <option
+                      key={usuario.idUsuario}
+                      value={usuario.idUsuario}
+                    >
+                      {usuario.nombre || usuario.email}
                     </option>
                   ))}
                 </select>
@@ -406,8 +354,11 @@ function GestionMensajes({ user }) {
                   <option value="">Selecciona destinatario</option>
 
                   {usuarios.map((usuario) => (
-                    <option key={usuario.idUsuario} value={usuario.idUsuario}>
-                      {usuario.nombre} {usuario.apellido} - {usuario.email}
+                    <option
+                      key={usuario.idUsuario}
+                      value={usuario.idUsuario}
+                    >
+                      {usuario.nombre || usuario.email}
                     </option>
                   ))}
                 </select>
@@ -418,7 +369,7 @@ function GestionMensajes({ user }) {
 
                 <input
                   name="asunto"
-                  placeholder="Ej: Reunión de apoderados"
+                  placeholder="Asunto del mensaje"
                   value={form.asunto}
                   onChange={handleChange}
                   required
@@ -426,11 +377,11 @@ function GestionMensajes({ user }) {
               </label>
 
               <label className="form-field full-width">
-                <span>Contenido del mensaje</span>
+                <span>Contenido</span>
 
                 <textarea
                   name="contenidoMensaje"
-                  placeholder="Escribe el contenido del mensaje..."
+                  placeholder="Escribe el mensaje..."
                   value={form.contenidoMensaje}
                   onChange={handleChange}
                   required
@@ -443,7 +394,7 @@ function GestionMensajes({ user }) {
                   type="submit"
                   disabled={guardando}
                 >
-                  {guardando ? "Enviando..." : "Crear mensaje"}
+                  {guardando ? "Enviando..." : "Enviar mensaje"}
                 </button>
 
                 <button
@@ -476,7 +427,7 @@ function GestionMensajes({ user }) {
               <input
                 className="search-input"
                 type="text"
-                placeholder="🔍 Buscar por usuario, asunto, estado o fecha..."
+                placeholder="🔍 Buscar por asunto, usuario o contenido..."
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
               />
@@ -492,88 +443,57 @@ function GestionMensajes({ user }) {
               <thead>
                 <tr>
                   <th>ID</th>
+                  <th>Asunto</th>
                   <th>Remitente</th>
                   <th>Destinatario</th>
-                  <th>Asunto</th>
-                  <th>Contenido</th>
                   <th>Estado</th>
                   <th>Fecha</th>
-                  <th>Acciones</th>
+
+                  {puedeEliminarMensajes && <th>Acciones</th>}
                 </tr>
               </thead>
 
               <tbody>
                 {mensajesFiltrados.map((mensaje) => (
-                  <tr key={obtenerIdMensaje(mensaje)}>
+                  <tr key={mensaje.idMensaje}>
                     <td>
                       <span className="id-badge">
-                        #{obtenerIdMensaje(mensaje)}
+                        #{mensaje.idMensaje}
                       </span>
                     </td>
 
                     <td>
-                      <div className="message-user-cell">
-                        <div className="message-avatar">R</div>
-
-                        <strong>
-                          {obtenerNombreUsuario(obtenerIdRemitente(mensaje))}
-                        </strong>
-                      </div>
-                    </td>
-
-                    <td>
-                      <div className="message-user-cell">
-                        <div className="message-avatar message-avatar-dest">
-                          D
-                        </div>
-
-                        <strong>
-                          {obtenerNombreUsuario(obtenerIdDestinatario(mensaje))}
-                        </strong>
-                      </div>
-                    </td>
-
-                    <td>
-                      <strong className="message-subject">
-                        {mensaje.asunto}
-                      </strong>
-                    </td>
-
-                    <td>
-                      <span className="message-content-cell">
+                      <strong>{mensaje.asunto}</strong>
+                      <p className="description-cell">
                         {mensaje.contenidoMensaje}
+                      </p>
+                    </td>
+
+                    <td>{obtenerNombreUsuario(mensaje.idRemitente)}</td>
+
+                    <td>{obtenerNombreUsuario(mensaje.idDestinatario)}</td>
+
+                    <td>
+                      <span className="subject-code-badge">
+                        {mensaje.leido ? "Leído" : "No leído"}
                       </span>
                     </td>
 
-                    <td>
-                      <span
-                        className={
-                          estaLeido(mensaje).toLowerCase() === "leído"
-                            ? "message-status-read"
-                            : "message-status-unread"
-                        }
-                      >
-                        {estaLeido(mensaje)}
-                      </span>
-                    </td>
+                    <td>{mensaje.fechaEnvio || "Sin fecha"}</td>
 
-                    <td>
-                      <span className="message-date-badge">
-                        {obtenerFecha(mensaje)}
-                      </span>
-                    </td>
+                    {puedeEliminarMensajes && (
+                      <td>
+                        <div className="action-buttons">
+                          {!mensaje.leido && (
+                            <button
+                              className="edit-btn"
+                              type="button"
+                              onClick={() => marcarLeido(mensaje.idMensaje)}
+                            >
+                              Marcar leído
+                            </button>
+                          )}
 
-                    <td>
-                      <div className="action-buttons">
-                        <button
-                          className="edit-btn"
-                          type="button"
-                          onClick={() => marcarLeido(mensaje)}
-                        >
-                          Marcar leído
-                        </button>
-
-                        {puedeEliminarMensajes && (
                           <button
                             className="delete-btn"
                             type="button"
@@ -581,9 +501,9 @@ function GestionMensajes({ user }) {
                           >
                             Eliminar
                           </button>
-                        )}
-                      </div>
-                    </td>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))}
 

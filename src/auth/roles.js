@@ -109,7 +109,7 @@ export const modulos = {
   mensajes: {
     id: "mensajes",
     nombre: "Mensajería",
-    descripcion: "Comunicación interna entre usuarios.",
+    descripcion: "Consultar mensajes internos.",
     ruta: "/admin/mensajes",
     icono: MessageSquare,
     resumen: "Mensajes",
@@ -136,7 +136,7 @@ export const modulos = {
   reuniones: {
     id: "reuniones",
     nombre: "Reuniones",
-    descripcion: "Ver y gestionar reuniones escolares.",
+    descripcion: "Ver reuniones escolares.",
     ruta: "/admin/reuniones",
     icono: Building2,
     resumen: "Reuniones",
@@ -173,37 +173,12 @@ const modulosPorRol = {
     "portal",
   ],
 
-  [ROLE.ADMINISTRATIVO]: [
-    "cursos",
-    "asignaturas",
-    "mensajes",
-    "calendario",
-    "reuniones",
-    "portal",
-  ],
-
   [ROLE.DOCENTE]: [
     "cursos",
     "asignaturas",
     "anotaciones",
     "calendario",
     "mensajes",
-    "reuniones",
-  ],
-
-  [ROLE.INSPECTOR]: [
-    "cursos",
-    "anotaciones",
-    "calendario",
-    "mensajes",
-  ],
-
-  [ROLE.APODERADO]: [
-    "fichaAlumno",
-    "calendario",
-    "mensajes",
-    "reuniones",
-    "portal",
   ],
 
   [ROLE.ESTUDIANTE]: [
@@ -214,11 +189,30 @@ const modulosPorRol = {
     "portal",
   ],
 
-  [ROLE.USER]: [
+  [ROLE.APODERADO]: [
+    "fichaAlumno",
     "calendario",
     "mensajes",
+    "reuniones",
     "portal",
   ],
+
+  [ROLE.INSPECTOR]: [
+    "cursos",
+    "anotaciones",
+    "calendario",
+  ],
+
+  [ROLE.ADMINISTRATIVO]: [
+    "cursos",
+    "asignaturas",
+    "mensajes",
+    "calendario",
+    "reuniones",
+    "portal",
+  ],
+
+  [ROLE.USER]: [],
 }
 
 export function getModuleIdsForRole(role) {
@@ -252,25 +246,65 @@ export function canCreateUsers(role) {
 }
 
 export function canManageAcademicData(role) {
-  return [ROLE.ADMIN, ROLE.ADMINISTRATIVO].includes(normalizeRole(role))
-}
-
-export function canManageAnnotations(role) {
-  return [ROLE.ADMIN, ROLE.DOCENTE, ROLE.INSPECTOR].includes(normalizeRole(role))
-}
-
-export function canManageCalendar(role) {
-  return [ROLE.ADMIN, ROLE.ADMINISTRATIVO, ROLE.INSPECTOR].includes(
-    normalizeRole(role)
-  )
+  return [
+    ROLE.ADMIN,
+    ROLE.ADMINISTRATIVO,
+  ].includes(normalizeRole(role))
 }
 
 export function canDeleteRecords(role) {
-  return [ROLE.ADMIN, ROLE.ADMINISTRATIVO].includes(normalizeRole(role))
+  return [
+    ROLE.ADMIN,
+    ROLE.ADMINISTRATIVO,
+  ].includes(normalizeRole(role))
+}
+
+export function canCreateAnnotations(role) {
+  return [
+    ROLE.ADMIN,
+    ROLE.DOCENTE,
+    ROLE.INSPECTOR,
+  ].includes(normalizeRole(role))
+}
+
+export function canManageAnnotations(role) {
+  return [
+    ROLE.ADMIN,
+    ROLE.INSPECTOR,
+  ].includes(normalizeRole(role))
+}
+
+export function canManageCalendar(role) {
+  return [
+    ROLE.ADMIN,
+    ROLE.ADMINISTRATIVO,
+    ROLE.INSPECTOR,
+  ].includes(normalizeRole(role))
+}
+
+export function canManageMessages(role) {
+  return [
+    ROLE.ADMIN,
+    ROLE.ADMINISTRATIVO,
+  ].includes(normalizeRole(role))
 }
 
 export function canDeleteMessages(role) {
-  return normalizeRole(role) === ROLE.ADMIN
+  return canManageMessages(role)
+}
+
+export function canManageMeetings(role) {
+  return [
+    ROLE.ADMIN,
+    ROLE.ADMINISTRATIVO,
+  ].includes(normalizeRole(role))
+}
+
+export function canManagePortal(role) {
+  return [
+    ROLE.ADMIN,
+    ROLE.ADMINISTRATIVO,
+  ].includes(normalizeRole(role))
 }
 
 export const roles = [
