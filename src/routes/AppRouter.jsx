@@ -13,6 +13,7 @@ import GestionMensajes from "../pages/GestionMensajes"
 import GestionAnotaciones from "../pages/GestionAnotaciones"
 import GestionCalendario from "../pages/GestionCalendario"
 import GestionReuniones from "../pages/GestionReuniones"
+import GestionPortal from "../pages/GestionPortal"
 
 function AppRouter({ user, onLogout }) {
   return (
@@ -70,6 +71,10 @@ function AppRouter({ user, onLogout }) {
           path="/admin/reuniones"
           element={<GestionReuniones />}
         />
+        <Route
+  path="/admin/portal"
+  element={<GestionPortal />}
+/>
       </Routes>
     </BrowserRouter>
   )

@@ -20,6 +20,10 @@ export const serviceUrls = {
   meetings: stripTrailingSlash(
     import.meta.env.VITE_REUNIONES_API
   ),
+
+  portal: stripTrailingSlash(
+    import.meta.env.VITE_PORTAL_API
+  ),
 }
 
 export function requireServiceUrl(serviceName) {

@@ -31,6 +31,12 @@ export default defineConfig({
         secure: false,
         rewrite: (path) => path.replace(/^\/reuniones/, ""),
       },
+      "/portal": {
+        target: "http://44.197.5.69:8090",
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/portal/, ""),
+      },
     },
   },
 })

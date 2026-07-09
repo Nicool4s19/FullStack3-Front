@@ -36,6 +36,11 @@ const modulosAdmin = [
   descripcion: "Gestionar reuniones, citaciones y bitácora general.",
   ruta: "/admin/reuniones",
 },
+{
+  nombre: "Portal Informativo",
+  descripcion: "Gestionar mural digital y calendario estudiantil.",
+  ruta: "/admin/portal",
+},
 ]
 
 function AdminDashboard({ user, onLogout }) {
